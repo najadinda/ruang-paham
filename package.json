@@ -1,0 +1,11 @@
+{
+  "name": "ruang-paham",
+  "version": "1.0.0",
+  "description": "Platform Belajar Interaktif Ramah Anak SD Kelas 1-6 (React JS & Laravel)",
+  "scripts": {
+    "build": "npm run build --prefix frontend"
+  },
+  "keywords": ["ruang-paham", "education", "elementary-school", "react", "laravel"],
+  "author": "Ruang Paham Team",
+  "license": "MIT"
+}

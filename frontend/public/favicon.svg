@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="url(#blueGrad)" />
+  <!-- Book / Rocket cute icon -->
+  <path d="M26 68V34C26 30 30 28 35 28C43 28 48 33 50 35C52 33 57 28 65 28C70 28 74 30 74 34V68C74 70 71 72 65 72C58 72 52 67 50 67C48 67 42 72 35 72C29 72 26 70 26 68Z" fill="#FFFFFF" opacity="0.95"/>
+  <path d="M50 35V67" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+  <!-- Sparkle Star -->
+  <path d="M50 16L52 22L58 24L52 26L50 32L48 26L42 24L48 22Z" fill="#FCD34D"/>
+</svg>
