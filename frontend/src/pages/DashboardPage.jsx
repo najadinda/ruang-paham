@@ -29,23 +29,36 @@ import { AvatarDisplay } from '../utils/avatars';
 import { LoadingScreen } from '../components/LoadingScreen';
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [nowTime, setNowTime] = useState(Date.now());
   const [questPageIndex, setQuestPageIndex] = useState(0);
+  const [activityPageIndex, setActivityPageIndex] = useState(0);
 
   useEffect(() => {
     loadDashboard();
-  }, [user]);
+  }, [user?.id]);
 
-  // Otomatis arahkan carousel ke halaman misi yang belum selesai
+  // Sinkronisasi realtime otomatis saat fokus kembali ke window/tab
+  useEffect(() => {
+    const handleFocus = () => {
+      loadDashboard(true);
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Otomatis arahkan carousel ke halaman misi terbaru yang belum selesai
   useEffect(() => {
     if (dashboardData?.daily_quests && dashboardData.daily_quests.length > 0) {
-      const firstIncompleteIdx = dashboardData.daily_quests.findIndex(q => !q.completed);
+      const sorted = [...dashboardData.daily_quests].sort((a, b) => (b.id || 0) - (a.id || 0));
+      const firstIncompleteIdx = sorted.findIndex(q => !q.completed);
       if (firstIncompleteIdx !== -1) {
         setQuestPageIndex(Math.floor(firstIncompleteIdx / 3));
+      } else {
+        setQuestPageIndex(0);
       }
     }
   }, [dashboardData]);
@@ -54,7 +67,7 @@ export function DashboardPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setNowTime(Date.now());
-    }, 15000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -114,16 +127,22 @@ export function DashboardPage() {
     return 'Selamat Malam';
   };
 
-  const loadDashboard = async () => {
+  const loadDashboard = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const data = await api.getDashboard();
       setDashboardData(data);
-    } catch {
-      // Fallback data
+      // Sinkronkan data student & poin terbaru ke AuthContext & localStorage
+      if (data?.student && setUser) {
+        setUser(prev => ({ ...(prev || {}), ...data.student }));
+        localStorage.setItem('rp_user', JSON.stringify({ ...(user || {}), ...data.student }));
+      }
+    } catch (err) {
+      console.error('Gagal memuat dashboard:', err);
+      // Fallback data jika terjadi gangguan jaringan
       const isNewUser = (user?.points ?? 0) === 0;
       const userPoints = user?.points ?? 0;
-      const userGrade = user?.grade || 3;
+      const userGrade = user?.grade || 5;
 
       setDashboardData({
         student: user,
@@ -236,7 +255,7 @@ export function DashboardPage() {
         ]
       });
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -259,19 +278,56 @@ export function DashboardPage() {
   }
 
   const { streak, continue_learning, learning_activities, daily_quests, daily_quests_meta } = dashboardData;
-  const currentPoints = user?.points ?? 0;
+  const currentPoints = dashboardData?.student?.points ?? dashboardData?.stats?.total_points ?? dashboardData?.learning_activities?.total_points ?? user?.points ?? 0;
+  const currentGrade = dashboardData?.student?.grade ?? dashboardData?.stats?.grade ?? user?.grade ?? 5;
 
-  // Carousel Misi Harian: Batasi maksimal 3 misi per card / tampilan
+  // 1. Misi Harian: Urutkan secara terbaru (newest tier & quest id first)
+  const sortedQuests = [...(daily_quests || [])].sort((a, b) => (b.id || 0) - (a.id || 0));
   const QUESTS_PER_PAGE = 3;
-  const totalQuestPages = Math.max(1, Math.ceil((daily_quests?.length || 0) / QUESTS_PER_PAGE));
+  const totalQuestPages = Math.max(1, Math.ceil(sortedQuests.length / QUESTS_PER_PAGE));
   const safeQuestPageIndex = Math.min(questPageIndex, totalQuestPages - 1);
-  const currentQuests = (daily_quests || []).slice(
+  const currentQuests = sortedQuests.slice(
     safeQuestPageIndex * QUESTS_PER_PAGE,
     (safeQuestPageIndex + 1) * QUESTS_PER_PAGE
   );
 
-  // Pastikan daftar aktivitas belajar diambil dari API tanpa mock fallback
+  // 2. Riwayat Aktivitas Belajar: Urutkan berdasarkan waktu dibuka (terbaru di awal)
   const activityItems = Array.isArray(learning_activities?.items) ? learning_activities.items : [];
+  const sortedActivityItems = [...activityItems].sort((a, b) => {
+    const timeA = new Date(a.raw_updated_at || a.updated_at || 0).getTime();
+    const timeB = new Date(b.raw_updated_at || b.updated_at || 0).getTime();
+    return timeB - timeA;
+  });
+
+  // Carousel Aktivitas Belajar: 3 card per tampilan
+  const ACTIVITIES_PER_PAGE = 3;
+  const totalActivityPages = Math.max(1, Math.ceil(sortedActivityItems.length / ACTIVITIES_PER_PAGE));
+  const safeActivityPageIndex = Math.min(activityPageIndex, totalActivityPages - 1);
+  const currentActivities = sortedActivityItems.slice(
+    safeActivityPageIndex * ACTIVITIES_PER_PAGE,
+    (safeActivityPageIndex + 1) * ACTIVITIES_PER_PAGE
+  );
+
+  // Hitung durasi waktu belajar realtime rasional ramah anak (tidak menghitung selisih hari idle)
+  const getRealtimeDuration = (item) => {
+    if (!item) return 5;
+    if (item.status === 'sedang_belajar') {
+      if (item.raw_updated_at) {
+        const elapsed = Math.floor((nowTime - new Date(item.raw_updated_at).getTime()) / 60000);
+        if (elapsed >= 0 && elapsed <= 25) {
+          return Math.max(1, elapsed);
+        }
+      }
+      return Math.min(10, Math.max(1, Number(item.duration_minutes) || 3));
+    }
+    // Status selesai: durasi modul rasional (maksimal 20 menit)
+    const dur = Number(item.duration_minutes) || 10;
+    return dur > 20 ? 10 : Math.max(3, dur);
+  };
+
+  // Akumulasi total waktu belajar realtime dari seluruh aktivitas
+  const calculatedTotalMinutes = sortedActivityItems.reduce((acc, item) => acc + getRealtimeDuration(item), 0);
+  const displayTotalStudyMinutes = calculatedTotalMinutes > 0 ? calculatedTotalMinutes : (learning_activities?.total_study_minutes || 0);
 
   return (
     <div style={{ padding: '36px 0 80px 0' }}>
@@ -288,7 +344,7 @@ export function DashboardPage() {
           marginBottom: '28px',
           flexWrap: 'wrap'
         }}>
-          <AvatarDisplay avatarId={user?.avatar} size={64} />
+          <AvatarDisplay avatarId={dashboardData?.student?.avatar || user?.avatar} size={64} />
           <div style={{ minWidth: 0, flex: '1 1 240px' }}>
             {/* 1. Sebelum sapaan: Tanggal Hari Ini Otomatis */}
             <div style={{
@@ -317,11 +373,11 @@ export function DashboardPage() {
               letterSpacing: '-0.3px',
               lineHeight: 1.25
             }}>
-              {getTimeGreeting()}, {user?.name || 'Siswa Pintar'}!
+              {getTimeGreeting()}, {dashboardData?.student?.name || user?.name || 'Siswa Pintar'}!
             </h1>
 
             <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>
-              Siswa Kelas <strong style={{ color: 'var(--primary-blue)', fontWeight: 700 }}>{user?.grade || 3} SD</strong> • Total Poin: <strong style={{ color: '#D97706', fontWeight: 700 }}>{currentPoints} ⭐</strong>
+              Siswa Kelas <strong style={{ color: 'var(--primary-blue)', fontWeight: 700 }}>{currentGrade} SD</strong> • Total Poin: <strong style={{ color: '#D97706', fontWeight: 700 }}>{currentPoints} ⭐</strong>
             </p>
           </div>
         </div>
@@ -334,7 +390,7 @@ export function DashboardPage() {
           marginBottom: 'clamp(20px, 3.5vw, 28px)'
         }}>
           <StreakFlame
-            streakCount={streak?.count || user?.streak_count || 1}
+            streakCount={streak?.count ?? user?.streak_count ?? 1}
             message={streak?.message}
             weeklyDays={streak?.weekly_days}
             todayIndex={streak?.today_index}
@@ -838,7 +894,7 @@ export function DashboardPage() {
                 }}>
                   <Clock size={18} color="#D97706" style={{ margin: '0 auto 4px auto' }} />
                   <div style={{ fontSize: 'clamp(1rem, 3.2vw, 1.15rem)', fontWeight: 800, color: 'var(--text-main)' }}>
-                    {learning_activities?.total_study_minutes || learning_activities?.estimated_minutes || 0}m
+                    {displayTotalStudyMinutes}m
                   </div>
                   <div style={{ fontSize: 'clamp(0.66rem, 1.8vw, 0.72rem)', color: 'var(--text-muted)', fontWeight: 600 }}>
                     Waktu Belajar
@@ -862,24 +918,103 @@ export function DashboardPage() {
                 </div>
               </div>
 
-              {/* Sub-header List Aktivitas */}
+              {/* Sub-header List Aktivitas & Carousel Controls */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                justifyContent: 'space-between',
                 paddingBottom: '12px',
                 borderBottom: '1.5px solid #F1F5F9',
                 marginBottom: '16px',
-                fontSize: '0.88rem',
-                fontWeight: 700,
-                color: 'var(--text-main)'
+                flexWrap: 'wrap',
+                gap: '8px'
               }}>
-                <History size={16} color="var(--primary-blue)" />
-                <span>Riwayat Semua Aktivitas</span>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  color: 'var(--text-main)'
+                }}>
+                  <History size={16} color="var(--primary-blue)" />
+                  <span>Riwayat Semua Aktivitas</span>
+                </div>
+
+                {/* Carousel Controls jika ada lebih dari 3 aktivitas */}
+                {totalActivityPages > 1 && (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    backgroundColor: '#F1F5F9',
+                    padding: '3px 6px',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid #E2E8F0'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => setActivityPageIndex((prev) => Math.max(0, prev - 1))}
+                      disabled={safeActivityPageIndex === 0}
+                      style={{
+                        border: 'none',
+                        background: safeActivityPageIndex === 0 ? 'transparent' : '#FFFFFF',
+                        color: safeActivityPageIndex === 0 ? '#94A3B8' : 'var(--text-main)',
+                        cursor: safeActivityPageIndex === 0 ? 'not-allowed' : 'pointer',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: safeActivityPageIndex === 0 ? 'none' : '0 1px 3px rgba(0,0,0,0.1)',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Aktivitas Sebelumnya"
+                      aria-label="Aktivitas Sebelumnya"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    <span style={{
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      color: 'var(--text-muted)',
+                      padding: '0 6px',
+                      userSelect: 'none'
+                    }}>
+                      {safeActivityPageIndex + 1} / {totalActivityPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setActivityPageIndex((prev) => Math.min(totalActivityPages - 1, prev + 1))}
+                      disabled={safeActivityPageIndex >= totalActivityPages - 1}
+                      style={{
+                        border: 'none',
+                        background: safeActivityPageIndex >= totalActivityPages - 1 ? 'transparent' : '#FFFFFF',
+                        color: safeActivityPageIndex >= totalActivityPages - 1 ? '#94A3B8' : 'var(--text-main)',
+                        cursor: safeActivityPageIndex >= totalActivityPages - 1 ? 'not-allowed' : 'pointer',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: safeActivityPageIndex >= totalActivityPages - 1 ? 'none' : '0 1px 3px rgba(0,0,0,0.1)',
+                        transition: 'all 0.15s ease'
+                      }}
+                      title="Aktivitas Berikutnya"
+                      aria-label="Aktivitas Berikutnya"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* DAFTAR LIST SEMUA AKTIVITAS BELAJAR ATAU EMPTY STATE */}
-              {activityItems.length === 0 ? (
+              {/* CAROUSEL RIWAYAT AKTIVITAS BELAJAR (MAKSIMAL 3 CARD PER TAMPILAN) ATAU EMPTY STATE */}
+              {sortedActivityItems.length === 0 ? (
                 <div style={{
                   textAlign: 'center',
                   padding: '38px 16px',
@@ -934,141 +1069,181 @@ export function DashboardPage() {
                   </motion.button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {activityItems.map((item, idx) => {
-                    const isDone = item.status === 'selesai';
-                    return (
-                      <motion.div
-                        key={item.id || idx}
-                        whileHover={{ scale: 1.01, backgroundColor: '#F8FAFC' }}
-                        className="activity-item-card"
-                        style={{
-                          borderRadius: 'var(--radius-lg)',
-                          border: '1.5px solid #E2E8F0',
-                          backgroundColor: '#FFFFFF',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {/* Sisi Kiri Item: Icon & Info Materi */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0, width: '100%' }}>
-                          <div style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '14px',
-                            backgroundColor: item.subject_color ? `${item.subject_color}18` : 'var(--accent-tint)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
-                            {getSubjectIcon(item.subject_icon, item.subject_color || 'var(--primary-blue)')}
-                          </div>
-
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              flexWrap: 'wrap',
-                              marginBottom: '2px'
-                            }}>
-                              <span style={{
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                color: item.subject_color || 'var(--primary-blue)',
-                                textTransform: 'uppercase'
-                              }}>
-                                {item.subject_name}
-                              </span>
-                              <span style={{ color: '#CBD5E1', fontSize: '0.74rem' }}>•</span>
-                              <span
-                                style={{
-                                  fontSize: '0.72rem',
-                                  color: 'var(--text-muted)',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '3px',
-                                  fontWeight: 600
-                                }}
-                                title={item.updated_at ? `${item.updated_at} WIB` : 'Waktu belajar'}
-                              >
-                                <Clock size={11} color="var(--primary-blue)" />
-                                <span>{formatRealtimeAgo(item.raw_updated_at || item.updated_at)}</span>
-                              </span>
-                            </div>
-
-                            <h4 style={{
-                              fontSize: '0.94rem',
-                              fontWeight: 700,
-                              color: 'var(--text-main)',
-                              margin: 0,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                            title={item.lesson_title}
-                            >
-                              {item.lesson_title}
-                            </h4>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
-                              {isDone ? (
-                                <span className="badge badge-green" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 700 }}>
-                                  <CheckCircle size={11} /> Selesai
-                                </span>
-                              ) : (
-                                <span className="badge badge-blue" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 700 }}>
-                                  Sedang Belajar
-                                </span>
-                              )}
-                              {item.duration_minutes ? (
-                                <span style={{
-                                  fontSize: '0.72rem',
-                                  fontWeight: 700,
-                                  color: '#D97706',
-                                  backgroundColor: '#FEF3C7',
-                                  padding: '2px 8px',
-                                  borderRadius: 'var(--radius-full)'
-                                }}>
-                                  ⏱️ {item.duration_minutes}m belajar
-                                </span>
-                              ) : null}
-                              {item.points_earned && (
-                                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#D97706' }}>
-                                  +{item.points_earned} Poin ⭐
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Sisi Kanan: Tombol Aksi Buka Materi */}
-                        <div className="activity-item-actions">
-                          <button
-                            onClick={() => navigate(`/materi/${item.lesson_id}`)}
+                <>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={safeActivityPageIndex}
+                      initial={{ opacity: 0, x: 18 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -18 }}
+                      transition={{ duration: 0.22, ease: 'easeOut' }}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                    >
+                      {currentActivities.map((item, idx) => {
+                        const isDone = item.status === 'selesai';
+                        return (
+                          <motion.div
+                            key={item.id || idx}
+                            whileHover={{ scale: 1.01, backgroundColor: '#F8FAFC' }}
+                            className="activity-item-card"
                             style={{
-                              padding: '7px 14px',
-                              borderRadius: 'var(--radius-full)',
-                              backgroundColor: isDone ? 'var(--accent-tint)' : 'var(--primary-blue)',
-                              color: isDone ? 'var(--primary-blue)' : '#FFFFFF',
-                              fontSize: '0.8rem',
-                              fontWeight: 700,
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'all 0.15s ease'
+                              borderRadius: 'var(--radius-lg)',
+                              border: '1.5px solid #E2E8F0',
+                              backgroundColor: '#FFFFFF',
+                              transition: 'all 0.2s ease'
                             }}
                           >
-                            <span>{isDone ? 'Ulangi' : 'Buka'}</span>
-                            <ChevronRight size={14} />
-                          </button>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                            {/* Sisi Kiri Item: Icon & Info Materi */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0, width: '100%' }}>
+                              <div style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '14px',
+                                backgroundColor: item.subject_color ? `${item.subject_color}18` : 'var(--accent-tint)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {getSubjectIcon(item.subject_icon, item.subject_color || 'var(--primary-blue)')}
+                              </div>
+
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  flexWrap: 'wrap',
+                                  marginBottom: '2px'
+                                }}>
+                                  <span style={{
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    color: item.subject_color || 'var(--primary-blue)',
+                                    textTransform: 'uppercase'
+                                  }}>
+                                    {item.subject_name}
+                                  </span>
+                                  <span style={{ color: '#CBD5E1', fontSize: '0.74rem' }}>•</span>
+                                  <span
+                                    style={{
+                                      fontSize: '0.72rem',
+                                      color: 'var(--text-muted)',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      fontWeight: 600
+                                    }}
+                                    title={item.updated_at ? `${item.updated_at} WIB` : 'Waktu buka materi'}
+                                  >
+                                    <Clock size={11} color="var(--primary-blue)" />
+                                    <span>{formatRealtimeAgo(item.raw_updated_at || item.updated_at)}</span>
+                                  </span>
+                                </div>
+
+                                <h4 style={{
+                                  fontSize: '0.94rem',
+                                  fontWeight: 700,
+                                  color: 'var(--text-main)',
+                                  margin: 0,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis'
+                                }}
+                                title={item.lesson_title}
+                                >
+                                  {item.lesson_title}
+                                </h4>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                                  {isDone ? (
+                                    <span className="badge badge-green" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 700 }}>
+                                      <CheckCircle size={11} /> Selesai
+                                    </span>
+                                  ) : (
+                                    <span className="badge badge-blue" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 700 }}>
+                                      Sedang Belajar
+                                    </span>
+                                  )}
+                                  <span style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    color: '#D97706',
+                                    backgroundColor: '#FEF3C7',
+                                    padding: '2px 8px',
+                                    borderRadius: 'var(--radius-full)'
+                                  }}>
+                                    ⏱️ {getRealtimeDuration(item)}m belajar
+                                  </span>
+                                  {item.points_earned && (
+                                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#D97706' }}>
+                                      +{item.points_earned} Poin ⭐
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Sisi Kanan: Tombol Aksi Buka Materi */}
+                            <div className="activity-item-actions">
+                              <button
+                                onClick={() => navigate(`/materi/${item.lesson_id}`)}
+                                style={{
+                                  padding: '7px 14px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: isDone ? 'var(--accent-tint)' : 'var(--primary-blue)',
+                                  color: isDone ? 'var(--primary-blue)' : '#FFFFFF',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  transition: 'all 0.15s ease'
+                                }}
+                              >
+                                <span>{isDone ? 'Ulangi' : 'Buka'}</span>
+                                <ChevronRight size={14} />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Indikator Titik Halaman Carousel (Dots Pagination) */}
+                  {totalActivityPages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginTop: '16px'
+                    }}>
+                      {Array.from({ length: totalActivityPages }).map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setActivityPageIndex(idx)}
+                          style={{
+                            border: 'none',
+                            height: '7px',
+                            width: safeActivityPageIndex === idx ? '24px' : '8px',
+                            borderRadius: 'var(--radius-full)',
+                            backgroundColor: safeActivityPageIndex === idx ? 'var(--success-green)' : '#CBD5E1',
+                            cursor: 'pointer',
+                            padding: 0,
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                          }}
+                          title={`Halaman Aktivitas ${idx + 1}`}
+                          aria-label={`Ke halaman aktivitas ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Footer Aktivitas Terakhir */}

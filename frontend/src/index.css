@@ -476,45 +476,104 @@ button {
   }
 }
 
-/* Streak Flame Card Responsive */
+/* =========================================================================
+   STREAK FLAME CARD: DESKTOP & RESPONSIVE LAYOUT
+   Desktop: Layout horizontal luas, icon + info di kiri, 7 lingkaran di kanan.
+   Responsive (<= 860px): Stack vertikal rapi, 7 lingkaran memenuhi lebar kartu.
+   ========================================================================= */
 .streak-flame-wrapper {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 28px !important;
+  padding: 24px 28px !important;
+  background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 45%, #FDE68A 100%) !important;
+  border: 2px solid #FCD34D !important;
+  border-radius: 24px !important;
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.streak-flame-bg-icon {
+  position: absolute !important;
+  right: -15px !important;
+  bottom: -25px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  display: block !important;
+}
+
+.streak-flame-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  z-index: 1 !important;
+}
+
+.streak-flame-main-icon {
+  width: 64px !important;
+  height: 64px !important;
+  flex-shrink: 0 !important;
 }
 
 .streak-flame-days {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  align-items: center;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+  z-index: 1 !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  padding: 10px 16px !important;
+  border-radius: 20px !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.28) !important;
+  backdrop-filter: blur(4px) !important;
 }
 
 @media (max-width: 860px) {
   .streak-flame-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 18px !important;
-    padding: 20px 16px !important;
-    border-radius: var(--radius-lg) !important;
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
   }
+
+  .streak-flame-bg-icon {
+    display: none !important;
+  }
+
+  .streak-flame-content {
+    width: 100% !important;
+    gap: 14px !important;
+  }
+
+  .streak-flame-main-icon {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
   .streak-flame-days {
     width: 100% !important;
     max-width: 100% !important;
-    box-sizing: border-box !important;
+    margin-left: 0 !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     flex-wrap: nowrap !important;
     gap: 4px !important;
-    margin-top: 4px !important;
+    padding: 12px 10px !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
   }
 }
 

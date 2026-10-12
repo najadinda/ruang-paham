@@ -37,7 +37,16 @@ class SubjectController extends Controller
     public function show(Request $request, $id)
     {
         $grade = $request->query('grade');
-        $user = $request->user('sanctum');
+        $user = $request->user();
+        if (!$user) {
+            $user = $request->user('sanctum') ?: auth('sanctum')->user();
+        }
+        if (!$user && $token = $request->bearerToken()) {
+            $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+            if ($accessToken) {
+                $user = $accessToken->tokenable;
+            }
+        }
 
         $subject = Subject::findOrFail($id);
 

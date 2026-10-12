@@ -18,49 +18,30 @@ class DashboardController extends Controller
         $user = $request->user();
 
         // 1. Learning Streak (Api Semangat) Realtime
-        $streak = max(1, (int) ($user->streak_count ?: 1));
-
-        // Hari ini dalam seminggu (Senin = 1 ... Sabtu = 6 ... Minggu = 7)
-        $now = now();
-        $todayIso = (int) $now->dayOfWeekIso; // 1 (Senin) .. 6 (Sabtu) .. 7 (Minggu)
+        $nowJakarta = now('Asia/Jakarta');
+        $todayIso = (int) $nowJakarta->dayOfWeekIso; // 1 (Senin) .. 6 (Sabtu) .. 7 (Minggu)
         $todayIndex = $todayIso - 1; // 0 (Senin) .. 5 (Sabtu) .. 6 (Minggu)
+        $todayDate = $nowJakarta->toDateString();
 
-        // Ambil hari-hari aktif belajar di minggu ini dari database
-        $startOfWeek = $now->copy()->startOfWeek(); // Senin 00:00:00
-        $endOfWeek = $now->copy()->endOfWeek(); // Minggu 23:59:59
-
-        $activeDayIndices = UserProgress::where('user_id', $user->id)
-            ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
+        // Ambil tanggal unik aktivitas belajar user dari database
+        $userActiveDates = UserProgress::where('user_id', $user->id)
             ->get()
-            ->map(fn($p) => $p->updated_at->dayOfWeekIso - 1)
+            ->map(fn($p) => $p->updated_at->setTimezone('Asia/Jakarta')->toDateString())
             ->unique()
-            ->values()
-            ->toArray();
+            ->values();
 
-        // Hari ini pengguna sedang aktif membuka dashboard/belajar, pastikan todayIndex aktif
-        if (!in_array($todayIndex, $activeDayIndices)) {
-            $activeDayIndices[] = $todayIndex;
+        // Hari ini siswa membuka dashboard / belajar, maka hari ini aktif secara realtime
+        $allActiveDates = $userActiveDates->push($todayDate)->unique()->values();
+
+        // Hitung hari beruntun aktif menyala (streak) secara realtime dari hari ini ke belakang
+        $consecutiveActive = 0;
+        $dateWalker = $nowJakarta->copy();
+        while ($allActiveDates->contains($dateWalker->toDateString())) {
+            $consecutiveActive++;
+            $dateWalker->subDay();
         }
 
         $baseStreak = max(1, (int) ($user->streak_count ?: 1));
-
-        // Jika streak berturut-turut > 1, aktifkan juga hari-hari sebelum hari ini sejumlah streak
-        for ($i = 0; $i < $baseStreak; $i++) {
-            $targetIdx = $todayIndex - $i;
-            if ($targetIdx >= 0 && !in_array($targetIdx, $activeDayIndices)) {
-                $activeDayIndices[] = $targetIdx;
-            }
-        }
-
-        // Hitung berapa hari beruntun api aktif menyala sampai hari ini secara realtime
-        $consecutiveActive = 0;
-        for ($idx = $todayIndex; $idx >= 0; $idx--) {
-            if (in_array($idx, $activeDayIndices)) {
-                $consecutiveActive++;
-            } else {
-                break;
-            }
-        }
         $streak = max($consecutiveActive, $baseStreak, 1);
 
         if ((int) $user->streak_count !== $streak) {
@@ -78,10 +59,13 @@ class DashboardController extends Controller
             ['short' => 'Min', 'letter' => 'M', 'name' => 'Minggu'],
         ];
 
+        // Tentukan api aktif pada 7 hari (Senin s/d Minggu) secara realtime:
+        // Hari ini aktif, dan hari-hari sebelumnya yang termasuk dalam rentang streak aktif menyala
         $weeklyDays = [];
         foreach ($dayNames as $idx => $d) {
-            $isActive = in_array($idx, $activeDayIndices);
+            $daysAgo = ($todayIndex - $idx + 7) % 7;
             $isToday = ($idx === $todayIndex);
+            $isActive = ($daysAgo < $streak);
             $weeklyDays[] = [
                 'index' => $idx,
                 'short' => $d['short'],
@@ -308,6 +292,9 @@ class DashboardController extends Controller
             }
         }
 
+        // Urutkan misi harian secara terbaru yang ditampilkan (tantangan & tier terbaru di paling awal)
+        $dailyQuests = collect($dailyQuests)->sortByDesc('id')->values()->all();
+
         $completedQuestsCount = collect($dailyQuests)->filter(fn($q) => $q['completed'])->count();
         $totalQuestsCount = count($dailyQuests);
 
@@ -326,11 +313,29 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($p) {
                 $durationMinutes = 0;
-                if ($p->created_at && $p->updated_at) {
-                    $diffMins = max(1, (int) round($p->created_at->diffInMinutes($p->updated_at)));
-                    $durationMinutes = $p->status === 'selesai' ? max(5, $diffMins) : $diffMins;
+                $isSameDay = $p->created_at && $p->updated_at && $p->created_at->isSameDay($p->updated_at);
+
+                if ($p->status === 'sedang_belajar') {
+                    // Durasi aktif belajar: hitung waktu nyata sejak materi dibuka hari ini
+                    if ($p->updated_at && $p->updated_at->isToday()) {
+                        $elapsed = (int) round($p->updated_at->diffInMinutes(now()));
+                        $durationMinutes = max(1, min(20, $elapsed));
+                    } else {
+                        $durationMinutes = 3;
+                    }
                 } else {
-                    $durationMinutes = $p->status === 'selesai' ? 10 : 3;
+                    // Status selesai: durasi belajar rasional untuk modul anak SD (5 - 20 menit)
+                    if ($isSameDay && $p->created_at && $p->updated_at) {
+                        $diffMins = (int) round($p->created_at->diffInMinutes($p->updated_at));
+                        if ($diffMins >= 3 && $diffMins <= 20) {
+                            $durationMinutes = $diffMins;
+                        } else {
+                            $durationMinutes = $diffMins < 3 ? 5 : 10;
+                        }
+                    } else {
+                        // Selesai di hari berbeda (jeda lama): rata-rata waktu belajar riil per modul adalah 10 menit
+                        $durationMinutes = 10;
+                    }
                 }
 
                 return [
@@ -387,7 +392,7 @@ class DashboardController extends Controller
                 'today_index' => $todayIndex,
                 'today_name' => $dayNames[$todayIndex]['name'],
                 'weekly_days' => $weeklyDays,
-                'message' => 'Luar biasa! Kamu sudah ' . $streak . ' hari berturut-turut belajar di Ruang Paham!',
+                'message' => 'Luar biasa! Kamu sudah ' . $streak . ' hari berturut-turut belajar di Ruang Paham! Apimu menyala aktif hari ini (' . $dayNames[$todayIndex]['name'] . '). Terus pertahankan semangat belajarmu!',
             ],
             'continue_learning' => [
                 'has_activity' => $hasActivity,

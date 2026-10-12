@@ -41,14 +41,14 @@ function MainLayout() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Login page dan register page tidak perlu menggunakan navbar dan footer, cukup form nya aja
+  // Halaman Login dan Register tidak menggunakan Navbar dan Footer
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <ScrollToAnchor />
 
-      {/* Navbar hanya dirender jika BUKAN halaman login/register */}
+      {/* Navbar tidak ditampilkan di halaman login dan register */}
       {!isAuthPage && <Navbar />}
 
       <main style={{ flex: 1, display: isAuthPage ? 'flex' : 'block', flexDirection: 'column' }}>
@@ -57,23 +57,23 @@ function MainLayout() {
             {/* Landing Page */}
             <Route path="/" element={<LandingPage />} />
 
-            {/* Autentikasi (tanpa navbar & footer) */}
-            <Route
-              path="/login"
-              element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />}
-            />
-            <Route
-              path="/register"
-              element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
-            />
+            {/* Autentikasi: Selalu tampilkan halaman Login/Register */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-            {/* Halaman Siswa & Belajar */}
+            {/* Halaman Siswa & Belajar (Hanya untuk yang sudah login / baru selesai daftar) */}
             <Route
               path="/dashboard"
               element={user ? <DashboardPage /> : <Navigate to="/login" replace />}
             />
-            <Route path="/jelajahi" element={<ExplorePage />} />
-            <Route path="/materi/:lessonId" element={<LessonDetailPage />} />
+            <Route
+              path="/jelajahi"
+              element={user ? <ExplorePage /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/materi/:lessonId"
+              element={user ? <LessonDetailPage /> : <Navigate to="/login" replace />}
+            />
             <Route
               path="/profil"
               element={user ? <ProfilePage /> : <Navigate to="/login" replace />}
@@ -85,7 +85,7 @@ function MainLayout() {
         </Suspense>
       </main>
 
-      {/* Footer hanya dirender jika BUKAN halaman login/register */}
+      {/* Footer tidak ditampilkan di halaman login dan register */}
       {!isAuthPage && <Footer />}
     </div>
   );

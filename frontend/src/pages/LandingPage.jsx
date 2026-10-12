@@ -11,14 +11,17 @@ import {
   Calculator, 
   BookOpen, 
   ShieldCheck, 
-  Languages,
-  Palette,
-  HeartPulse,
-  Sparkles
+  Languages, 
+  Palette, 
+  HeartPulse, 
+  Sparkles,
+  LogIn
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export function LandingPage({ setActivePage }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleRegisterClick = () => {
     if (typeof setActivePage === 'function') setActivePage('register');
@@ -182,8 +185,8 @@ export function LandingPage({ setActivePage }) {
               Ruang belajar digital yang dirancang khusus untuk siswa SD Kelas 1 hingga 6. Dilengkapi materi ringkas, video edukasi, kuis interaktif, dan karakter robot & satwa sahabatmu!
             </p>
 
-            {/* CTA Button: Hanya "Mulai Petualangan Belajarmu" diarahkan ke register page */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
+            {/* CTA Buttons: Mulai Petualangan Belajarmu & Masuk ke Akun */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: '32px' }}>
               <motion.button
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.97 }}
@@ -192,6 +195,16 @@ export function LandingPage({ setActivePage }) {
               >
                 <Rocket size={20} />
                 <span>Mulai Petualangan Belajarmu</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate('/login')}
+                className="btn btn-outline btn-lg"
+              >
+                <LogIn size={20} />
+                <span>Masuk ke Akun</span>
               </motion.button>
             </div>
 
@@ -414,19 +427,19 @@ export function LandingPage({ setActivePage }) {
         </div>
       </section>
 
-      {/* 3.1 Section Pratinjau Mata Pelajaran */}
-      {/* Catatan: Hanya menampilkan card saja, tidak mengarahkan ke materi maupun kuis */}
-      <section id="mata-pelajaran" style={{ padding: '80px 0', backgroundColor: 'var(--bg-main)', scrollMarginTop: '80px' }}>
+      {/* 3.1 Section Pratinjau Mata Pelajaran (id="jelajahi" untuk navigasi Landing Page) */}
+      {/* Catatan: Di Landing Page HANYA menampilkan card mata pelajaran, modul materi diakses di Halaman Siswa */}
+      <section id="jelajahi" style={{ padding: '80px 0', backgroundColor: 'var(--bg-main)', scrollMarginTop: '80px' }}>
         <div className="container">
           <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto 46px auto' }}>
             <span className="badge badge-blue" style={{ marginBottom: '12px' }}>
-              Pilihan Mata Pelajaran
+              Jelajahi Mata Pelajaran
             </span>
             <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
               Mata Pelajaran Sekolah Dasar
             </h2>
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400 }}>
-              Materi lengkap dan seru yang disesuaikan dengan kurikulum SD Kelas 1 hingga 6.
+              Materi lengkap dan seru yang disesuaikan dengan kurikulum SD Kelas 1 hingga 6. Masuk atau daftar akun untuk mengakses seluruh modul materi dan kuis interaktif!
             </p>
           </div>
 
@@ -468,6 +481,23 @@ export function LandingPage({ setActivePage }) {
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0, fontWeight: 400 }}>
                   {subj.desc}
                 </p>
+
+                <div style={{
+                  marginTop: '16px',
+                  paddingTop: '12px',
+                  borderTop: '1.5px dashed #E2E8F0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '0.8rem'
+                }}>
+                  <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>
+                    Tersedia di Halaman Siswa
+                  </span>
+                  <span style={{ color: subj.color, fontWeight: 700 }}>
+                    Modul Lengkap ✨
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -476,11 +506,11 @@ export function LandingPage({ setActivePage }) {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => navigate('/jelajahi')}
+              onClick={() => navigate(user ? '/jelajahi' : '/register')}
               className="btn btn-outline"
               style={{ padding: '12px 28px', fontSize: '0.98rem', fontWeight: 600 }}
             >
-              <span>Jelajahi Semua Mata Pelajaran &rarr;</span>
+              <span>{user ? 'Buka Halaman Siswa & Akses Materi' : 'Daftar Sekarang untuk Akses Materi Pembelajaran'} &rarr;</span>
             </motion.button>
           </div>
         </div>

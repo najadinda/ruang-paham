@@ -5,13 +5,17 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('rp_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('rp_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // If token exists, sync latest profile
+    // Jika token tersimpan, sinkronkan profil data aktivitas terbaru dari database
     const token = localStorage.getItem('rp_token');
     if (token) {
       api.getProfile()
@@ -21,8 +25,13 @@ export function AuthProvider({ children }) {
             localStorage.setItem('rp_user', JSON.stringify(res.user));
           }
         })
-        .catch(() => {
-          // Keep cached user if offline
+        .catch((err) => {
+          // Hanya jika token sudah kedaluwarsa/tidak valid (401), hapus sesi
+          if (err?.message?.includes('Unauthenticated') || err?.message?.includes('unauthenticated')) {
+            localStorage.removeItem('rp_token');
+            localStorage.removeItem('rp_user');
+            setUser(null);
+          }
         });
     }
   }, []);

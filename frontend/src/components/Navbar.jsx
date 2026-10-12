@@ -22,6 +22,14 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Navigasi siswa (Dashboard, Jelajahi, Profil) HANYA aktif jika SUDAH login dan berada di rute halaman siswa (/dashboard, /jelajahi, /materi, /profil)
+  // Di halaman publik (Landing Page '/', '/login', '/register'), SELALU tampilkan navigasi publik (Keunggulan, Jelajahi, Masuk, Daftar)
+  const isStudentPage = location.pathname.startsWith('/dashboard') || 
+                        location.pathname.startsWith('/jelajahi') || 
+                        location.pathname.startsWith('/materi') || 
+                        location.pathname.startsWith('/profil');
+  const showStudentNav = !!user && isStudentPage;
+
   // Close dropdown when clicked outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -77,7 +85,7 @@ export function Navbar() {
             ========================================================= */}
         <div style={{ flex: '0 0 auto' }}>
           <Link
-            to={user ? '/dashboard' : '/'}
+            to={showStudentNav ? '/dashboard' : '/'}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -128,11 +136,11 @@ export function Navbar() {
 
         {/* =========================================================================
             2. POSISI TENGAH: Navigasi Desktop
-            - Belum Login (Landing Page): Keunggulan, Jelajahi (beda halaman)
-            - Sudah Login (Halaman Siswa): Dashboard, Jelajahi, Profil
+            - Belum Login / Landing Page: Keunggulan, Jelajahi (beda halaman)
+            - Sudah Login (Halaman Siswa): Dashboard, Jelajahi
             ========================================================= */}
         <nav className="nav-desktop-links">
-          {user ? (
+          {showStudentNav ? (
             /* =======================================================
                NAVIGASI HALAMAN SISWA (ketika sudah login/register):
                1. Dashboard
@@ -202,41 +210,36 @@ export function Navbar() {
                 Keunggulan
               </button>
 
-              {/* Navigasi Jelajahi dibuat BEDA HALAMAN (/jelajahi), bukan anchor link */}
-              <Link
-                to="/jelajahi"
+              {/* Navigasi Jelajahi Landing Page: Tetap berada di landing page (smooth scroll ke section card mata pelajaran #jelajahi) */}
+              <button
+                onClick={() => handleAnchorClick('jelajahi')}
                 style={{
-                  background: location.pathname === '/jelajahi' ? 'var(--accent-tint)' : 'transparent',
-                  color: location.pathname === '/jelajahi' ? 'var(--primary-blue)' : 'var(--text-main)',
+                  background: 'transparent',
+                  color: 'var(--text-main)',
                   padding: '8px 18px',
                   borderRadius: 'var(--radius-full)',
                   fontSize: '0.96rem',
-                  fontWeight: location.pathname === '/jelajahi' ? 700 : 600,
-                  textDecoration: 'none',
-                  border: location.pathname === '/jelajahi' ? '1.5px solid var(--accent-blue)' : '1.5px solid transparent',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-block'
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: 'none',
+                  transition: 'all 0.15s ease'
                 }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== '/jelajahi') e.currentTarget.style.color = 'var(--primary-blue)';
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== '/jelajahi') e.currentTarget.style.color = 'var(--text-main)';
-                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-blue)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-main)'}
               >
                 Jelajahi
-              </Link>
+              </button>
             </>
           )}
         </nav>
 
         {/* =========================================================================
             3. POSISI KANAN:
-            - Sudah Login: Nama Profil + DITAMPILKAN KELASNYA + Dropdown / Logout
-            - Belum Login: Tombol "Masuk" & "Daftar"
+            - Sudah Login & Bukan Landing Page: Nama Profil + DITAMPILKAN KELASNYA + Dropdown
+            - Belum Login / Landing Page: Tombol "Masuk" & "Daftar"
             ========================================================= */}
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {user ? (
+          {showStudentNav ? (
             /* Profil Siswa: Ditampilkan Nama + KELASNYA */
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button
@@ -367,11 +370,11 @@ export function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            /* Belum Login: Tombol Masuk & Daftar */
+            /* Belum Login / Halaman Publik: Tombol Masuk & Daftar */
             <div className="nav-auth-desktop" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Link
                 to="/login"
-                className="btn btn-outline"
+                className={location.pathname === '/login' ? 'btn btn-primary' : 'btn btn-outline'}
                 style={{
                   padding: '7px 16px',
                   fontSize: '0.88rem',
@@ -384,7 +387,7 @@ export function Navbar() {
 
               <Link
                 to="/register"
-                className="btn btn-primary"
+                className={location.pathname === '/register' ? 'btn btn-primary' : (location.pathname === '/login' ? 'btn btn-outline' : 'btn btn-primary')}
                 style={{
                   padding: '7px 18px',
                   fontSize: '0.88rem',
@@ -428,7 +431,7 @@ export function Navbar() {
             }}
           >
             <div className="container" style={{ padding: '16px 20px 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {user ? (
+              {showStudentNav ? (
                 <>
                   <Link
                     to="/dashboard"
@@ -496,31 +499,35 @@ export function Navbar() {
                     <span>Keunggulan</span>
                   </button>
 
-                  <Link
-                    to="/jelajahi"
-                    onClick={() => setMobileMenuOpen(false)}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleAnchorClick('jelajahi');
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
                       padding: '12px 16px',
                       borderRadius: 'var(--radius-lg)',
-                      background: location.pathname === '/jelajahi' ? 'var(--accent-tint)' : 'transparent',
-                      color: location.pathname === '/jelajahi' ? 'var(--primary-blue)' : 'var(--text-main)',
+                      background: 'transparent',
+                      color: 'var(--text-main)',
                       fontWeight: 600,
                       fontSize: '0.96rem',
-                      textDecoration: 'none'
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left'
                     }}
                   >
                     <Compass size={18} color="var(--primary-blue)" />
-                    <span>Jelajahi</span>
-                  </Link>
+                    <span>Jelajahi Mata Pelajaran</span>
+                  </button>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
                     <Link
                       to="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="btn btn-outline"
+                      className={location.pathname === '/login' ? 'btn btn-primary' : 'btn btn-outline'}
                       style={{ textAlign: 'center', padding: '10px 14px', fontSize: '0.92rem' }}
                     >
                       Masuk
@@ -528,7 +535,7 @@ export function Navbar() {
                     <Link
                       to="/register"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="btn btn-primary"
+                      className={location.pathname === '/register' ? 'btn btn-primary' : (location.pathname === '/login' ? 'btn btn-outline' : 'btn btn-primary')}
                       style={{ textAlign: 'center', padding: '10px 14px', fontSize: '0.92rem' }}
                     >
                       Daftar

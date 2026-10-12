@@ -37,10 +37,10 @@ export function RegisterPage({ setActivePage }) {
     try {
       setLoading(true);
       await register({
-        name: formData.name,
-        email: formData.email,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
         grade: parseInt(formData.grade, 10),
-        password: formData.password
+        password: formData.password.trim()
       });
       if (typeof setActivePage === 'function') setActivePage('dashboard');
       navigate('/dashboard');

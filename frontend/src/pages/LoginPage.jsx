@@ -22,7 +22,7 @@ import { api } from '../services/api';
 
 export function LoginPage({ setActivePage }) {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const [loginInput, setLoginInput] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -63,8 +63,8 @@ export function LoginPage({ setActivePage }) {
     try {
       setLoading(true);
       await login({
-        login: loginInput,
-        password: password
+        login: loginInput.trim(),
+        password: password.trim()
       });
       if (typeof setActivePage === 'function') setActivePage('dashboard');
       navigate('/dashboard');
@@ -195,7 +195,7 @@ export function LoginPage({ setActivePage }) {
           </Link>
         </div>
         {/* Header Form */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             width: '52px',
             height: '52px',
@@ -249,7 +249,7 @@ export function LoginPage({ setActivePage }) {
               id="login-input"
               type="text"
               className="form-input"
-              placeholder="Budi Pratama atau budi@ruangpaham.id"
+              placeholder="Contoh: Budi Pratama atau nama@email.com"
               value={loginInput}
               onChange={(e) => setLoginInput(e.target.value)}
               required
@@ -267,7 +267,7 @@ export function LoginPage({ setActivePage }) {
                 id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="Masukkan kata sandimu"
+                placeholder="Minimal 8 karakter"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: '48px' }}
@@ -499,7 +499,7 @@ export function LoginPage({ setActivePage }) {
                   id="forgot-email"
                   type="email"
                   className="form-input"
-                  placeholder="contoh: naja@gmail.com"
+                  placeholder="nama@email.com"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   style={{ fontSize: '0.92rem' }}

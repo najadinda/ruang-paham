@@ -55,31 +55,21 @@ ruang-paham/
 
 ---
 
-## 🚀 Panduan Menjalankan Proyek (1 Rute Web.php Terpadu)
-
-Website Ruang Paham telah disatukan sepenuhnya ke dalam **Laravel (`backend/routes/web.php`)**, di mana seluruh rute API, Autentikasi, dan Frontend SPA React disajikan secara langsung dari 1 instance Laravel:
+## 🚀 Panduan Menjalankan Proyek
 
 ### Cara Menjalankan:
-Cukup jalankan Laravel backend (atau buka via Laragon):
+Cukup jalankan frontend :
 ```bash
-cd d:\laragon\www\ruang-paham\backend
-php artisan serve
+cd d:\laragon\www\ruang-paham\frontend
+npm install
+npm run dev
 ```
 
 ### 🌐 Akses Website:
 Buka di browser:
-👉 **`http://127.0.0.1:8000`** *(atau `http://localhost:8000`)*
+👉 **`http://localhost:5173/`** 
 
-*(Frontend dan Backend berjalan bersamaan dalam 1 server Laravel, tanpa perlu file script tambahan)*
-
----
-
-## 👥 Akun Uji Coba (Seeded Demo Accounts)
-
-| Nama Siswa | Email | Password | Kelas | Catatan |
-| :--- | :--- | :--- | :--- | :--- |
-| **Budi Pratama** | `budi@ruangpaham.id` | `password123` | Kelas 3 SD | Siswa aktif (Streak 5 hari 🔥, 140 ⭐, untuk uji coba Kondisi 1 Lanjutkan Belajar) |
-| **Siti Aisyah** | `siti@ruangpaham.id` | `password123` | Kelas 1 SD | Siswa baru (Streak 1 hari 🔥, 0 ⭐, untuk uji coba Kondisi 2 Empty State "Kamu belum mulai belajar") |
+*(Frontend berjalan di server Vite, Backend berjalan di server Laravel)*
 
 ---
 

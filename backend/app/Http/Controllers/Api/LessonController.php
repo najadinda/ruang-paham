@@ -16,7 +16,16 @@ class LessonController extends Controller
     public function show(Request $request, $id)
     {
         $lesson = Lesson::with('subject')->findOrFail($id);
-        $user = $request->user('sanctum');
+        $user = $request->user();
+        if (!$user) {
+            $user = $request->user('sanctum') ?: auth('sanctum')->user();
+        }
+        if (!$user && $token = $request->bearerToken()) {
+            $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
+            if ($accessToken) {
+                $user = $accessToken->tokenable;
+            }
+        }
 
         $status = 'belum_mulai';
         if ($user) {
@@ -28,8 +37,11 @@ class LessonController extends Controller
             // If it was 'belum_mulai', move to 'sedang_belajar'
             if ($progress->status === 'belum_mulai') {
                 $progress->status = 'sedang_belajar';
-                $progress->save();
             }
+
+            // Realtime: perbarui updated_at detik itu juga ketika siswa benar-benar membuka materi
+            $progress->touch();
+            $progress->save();
 
             $status = $progress->status;
         }

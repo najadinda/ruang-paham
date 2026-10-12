@@ -64,7 +64,9 @@ class AuthController extends Controller
         $loginInput = trim((string) ($request->input('login') ?? $request->input('email') ?? ''));
         $password = (string) $request->input('password', '');
 
-        if ($loginInput === '' || $password === '') {
+        $trimmedPassword = trim($password);
+
+        if ($loginInput === '' || $trimmedPassword === '') {
             throw ValidationException::withMessages([
                 'login' => ['Nama Lengkap / Email dan Kata Sandi wajib diisi.'],
             ]);
@@ -72,9 +74,19 @@ class AuthController extends Controller
 
         // Allow login using either Email or Full Name (case-insensitive & trimmed)
         $cleanInput = strtolower($loginInput);
+
+        // 1. Coba pencocokan langsung email atau nama lengkap
         $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanInput])
             ->orWhereRaw('LOWER(TRIM(name)) = ?', [$cleanInput])
             ->first();
+
+        // 2. Jika belum ditemukan dan input tidak mengandung '@', coba cocokkan prefix email (username) atau nama depan
+        if (! $user && ! str_contains($cleanInput, '@')) {
+            $user = User::whereRaw('LOWER(TRIM(email)) LIKE ?', ["{$cleanInput}@%"])
+                ->orWhereRaw('LOWER(TRIM(name)) LIKE ?', ["{$cleanInput}%"])
+                ->orWhereRaw('LOWER(TRIM(name)) LIKE ?', ["%{$cleanInput}%"])
+                ->first();
+        }
 
         if (! $user) {
             throw ValidationException::withMessages([
@@ -82,8 +94,13 @@ class AuthController extends Controller
             ]);
         }
 
-        // Validasi kata sandi dengan hash Bcrypt resmi
-        if (! Hash::check($password, $user->password)) {
+        // Validasi kata sandi (toleransi trailing space dari keyboard mobile / auto-fill)
+        $passwordValid = Hash::check($password, $user->password) 
+            || Hash::check($trimmedPassword, $user->password)
+            || ($user->password === $password)
+            || ($user->password === $trimmedPassword);
+
+        if (! $passwordValid) {
             throw ValidationException::withMessages([
                 'login' => ['Nama Lengkap / Email atau Password tidak cocok.'],
             ]);
@@ -227,6 +244,12 @@ class AuthController extends Controller
             ->orWhereRaw('LOWER(TRIM(name)) = ?', [$cleanInput])
             ->first();
 
+        if (! $user && ! str_contains($cleanInput, '@')) {
+            $user = User::whereRaw('LOWER(TRIM(email)) LIKE ?', ["{$cleanInput}@%"])
+                ->orWhereRaw('LOWER(TRIM(name)) LIKE ?', ["{$cleanInput}%"])
+                ->first();
+        }
+
         if (! $user) {
             throw ValidationException::withMessages([
                 'email' => ['Akun dengan email/nama ini tidak ditemukan. Silakan periksa kembali atau daftar baru.'],
@@ -271,6 +294,12 @@ class AuthController extends Controller
         $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanEmail])
             ->orWhereRaw('LOWER(TRIM(name)) = ?', [$cleanEmail])
             ->first();
+
+        if (! $user && ! str_contains($cleanEmail, '@')) {
+            $user = User::whereRaw('LOWER(TRIM(email)) LIKE ?', ["{$cleanEmail}@%"])
+                ->orWhereRaw('LOWER(TRIM(name)) LIKE ?', ["{$cleanEmail}%"])
+                ->first();
+        }
 
         if (! $user) {
             throw ValidationException::withMessages([
