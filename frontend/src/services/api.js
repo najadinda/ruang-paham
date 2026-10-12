@@ -39,6 +39,34 @@ export const api = {
     return json;
   },
 
+  async forgotPassword(email) {
+    const res = await fetch(`${API_BASE}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Gagal memproses lupa kata sandi');
+      throw new Error(errMsg);
+    }
+    return json;
+  },
+
+  async resetPassword(data) {
+    const res = await fetch(`${API_BASE}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Gagal memperbarui kata sandi');
+      throw new Error(errMsg);
+    }
+    return json;
+  },
+
   async logout() {
     try {
       await fetch(`${API_BASE}/logout`, {

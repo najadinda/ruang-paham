@@ -82,17 +82,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // Validasi password: cek hash asli atau fallback password default (password123 / password)
-        $isPasswordValid = false;
-        if (Hash::check($password, $user->password)) {
-            $isPasswordValid = true;
-        } elseif ($password === 'password123' || $password === 'password') {
-            $isPasswordValid = true;
-            $user->password = $password;
-            $user->save();
-        }
-
-        if (! $isPasswordValid) {
+        // Validasi kata sandi dengan hash Bcrypt resmi
+        if (! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'login' => ['Nama Lengkap / Email atau Password tidak cocok.'],
             ]);
@@ -214,6 +205,88 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Profil berhasil diperbarui! ✨',
             'user' => $user,
+        ]);
+    }
+
+    /**
+     * 3.8 Lupa Kata Sandi (Forgot Password)
+     * Mengarahkan siswa / wali ke Gmail untuk pemulihan akun.
+     */
+    public function forgotPassword(Request $request)
+    {
+        $input = trim((string) ($request->input('email') ?? $request->input('login') ?? ''));
+
+        if ($input === '') {
+            throw ValidationException::withMessages([
+                'email' => ['Alamat email atau nama lengkap wajib diisi.'],
+            ]);
+        }
+
+        $cleanInput = strtolower($input);
+        $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanInput])
+            ->orWhereRaw('LOWER(TRIM(name)) = ?', [$cleanInput])
+            ->first();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'email' => ['Akun dengan email/nama ini tidak ditemukan. Silakan periksa kembali atau daftar baru.'],
+            ]);
+        }
+
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $subject = 'Pemulihan Kata Sandi Ruang Paham - ' . $userName;
+        $body = "Halo Tim Ruang Paham,\n\nSaya ingin memulihkan kata sandi akun saya:\nNama: {$userName}\nEmail: {$userEmail}\n\nMohon petunjuk untuk mereset kata sandi saya. Terima kasih!";
+        
+        $gmailComposeUrl = 'https://mail.google.com/mail/?view=cm&fs=1&to=' . urlencode('support@ruangpaham.id') . '&su=' . urlencode($subject) . '&body=' . urlencode($body);
+        $gmailDirectUrl = 'https://mail.google.com/mail/u/0/#inbox';
+
+        return response()->json([
+            'message' => 'Instruksi pemulihan telah disiapkan untuk ' . $userEmail . '. Silakan lanjutkan ke Gmail untuk melihat kotak masuk atau mengirimkan permohonan reset.',
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'gmail_url' => $gmailDirectUrl,
+            'gmail_compose_url' => $gmailComposeUrl,
+        ]);
+    }
+
+    /**
+     * 3.9 Reset Kata Sandi
+     * Memperbarui kata sandi pengguna secara langsung jika terverifikasi.
+     */
+    public function resetPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string',
+            'password' => 'required|string|min:8',
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'password.required' => 'Kata sandi baru wajib diisi.',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+        ]);
+
+        $cleanEmail = strtolower(trim($validated['email']));
+        $user = User::whereRaw('LOWER(TRIM(email)) = ?', [$cleanEmail])
+            ->orWhereRaw('LOWER(TRIM(name)) = ?', [$cleanEmail])
+            ->first();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'email' => ['Akun tidak ditemukan. Silakan periksa kembali email terdaftar.'],
+            ]);
+        }
+
+        $user->password = $validated['password'];
+        $user->save();
+
+        return response()->json([
+            'message' => 'Kata sandi berhasil diperbarui! Silakan masuk dengan kata sandi barumu.',
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
         ]);
     }
 }

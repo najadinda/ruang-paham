@@ -5,20 +5,18 @@ import confetti from 'canvas-confetti';
 import { 
   ArrowLeft, 
   Sparkles, 
-  HelpCircle, 
   CheckCircle2, 
   XCircle, 
   Award, 
   Video, 
-  Image as ImageIcon,
   BookOpen, 
-  Flame,
-  ArrowRight,
-  RotateCcw,
-  AlertCircle
+  ArrowRight, 
+  RotateCcw, 
+  AlertCircle 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete }) {
   const { lessonId: paramLessonId } = useParams();
@@ -188,12 +186,7 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
         </div>
       );
     }
-    return (
-      <div className="container" style={{ padding: '80px 20px', textAlign: 'center' }}>
-        <Sparkles size={40} color="var(--primary-blue)" />
-        <p style={{ marginTop: '16px', color: 'var(--text-muted)' }}>Membuka modul pembelajaran...</p>
-      </div>
-    );
+    return <LoadingScreen text="Membuka modul pembelajaran..." />;
   }
 
   const currentQuiz = quizzes[currentQuizIndex];
@@ -310,12 +303,12 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
                   overflow: 'hidden',
                   border: '2px solid var(--accent-blue)',
                   position: 'relative',
-                  maxHeight: '340px'
+                  maxHeight: '380px'
                 }}>
                   <img
                     src={lesson.image_url}
                     alt={lesson.title}
-                    style={{ width: '100%', height: '340px', objectFit: 'cover' }}
+                    style={{ width: '100%', height: 'clamp(180px, 42vw, 340px)', objectFit: 'cover' }}
                   />
                   <div style={{
                     position: 'absolute',
@@ -414,10 +407,13 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
                 onClick={() => setPhase('kuis')}
                 className="btn btn-primary btn-lg btn-pulse"
                 style={{
-                  fontSize: '1.2rem',
+                  fontSize: 'clamp(0.98rem, 3.5vw, 1.2rem)',
                   fontWeight: 800,
-                  padding: '18px 44px',
-                  borderRadius: 'var(--radius-xl)'
+                  padding: 'clamp(14px, 3vw, 18px) clamp(20px, 5vw, 44px)',
+                  borderRadius: 'var(--radius-xl)',
+                  maxWidth: '100%',
+                  whiteSpace: 'normal',
+                  textAlign: 'center'
                 }}
               >
                 <Sparkles size={24} />
@@ -444,9 +440,11 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
               justifyContent: 'space-between',
               marginBottom: '24px',
               backgroundColor: '#FFFFFF',
-              padding: '16px 24px',
+              padding: '16px 20px',
               borderRadius: 'var(--radius-lg)',
-              border: '2px solid #DBEAFE'
+              border: '2px solid #DBEAFE',
+              gap: '16px',
+              flexWrap: 'wrap'
             }}>
               <div>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>
@@ -458,7 +456,7 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
               </div>
 
               {/* Progress bar */}
-              <div style={{ width: '160px', height: '10px', backgroundColor: 'var(--accent-soft)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+              <div style={{ width: 'clamp(120px, 28vw, 180px)', height: '10px', backgroundColor: 'var(--accent-soft)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
                 <div style={{
                   width: `${((currentQuizIndex + 1) / quizzes.length) * 100}%`,
                   height: '100%',
@@ -472,7 +470,7 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
             <div style={{
               backgroundColor: '#FFFFFF',
               borderRadius: 'var(--radius-xl)',
-              padding: '40px',
+              padding: 'clamp(20px, 4vw, 40px)',
               border: '3px solid var(--accent-blue)',
               boxShadow: 'var(--shadow-card-hover)',
               marginBottom: '28px',
@@ -483,22 +481,17 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
               </span>
 
               <h2 style={{
-                fontSize: 'clamp(1.4rem, 2.8vw, 1.9rem)',
+                fontSize: 'clamp(1.3rem, 2.8vw, 1.9rem)',
                 fontWeight: 800,
                 color: 'var(--text-main)',
                 lineHeight: 1.45,
-                margin: '10px 0 30px 0'
+                margin: '10px 0 28px 0'
               }}>
                 "{currentQuiz.question}"
               </h2>
 
               {/* 3.6 Opsi Jawaban: Kotak Opsi (A, B, C, D) Berbentuk Grid Besar */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: '18px',
-                textAlign: 'left'
-              }}>
+              <div className="quiz-options-grid">
                 {currentQuiz.options?.map((opt) => {
                   const isSelected = answeredState?.selectedKey === opt.key;
                   const isCorrectKey = opt.key.toUpperCase() === currentQuiz.correct_option?.toUpperCase();
@@ -695,10 +688,10 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
               🏆
             </div>
 
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>
               Selamat Sahabat Pintar!
             </h2>
-            <p style={{ fontSize: '1.05rem', color: 'var(--text-muted)', marginBottom: '30px' }}>
+            <p style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '28px' }}>
               Kamu telah menyelesaikan modul dan kuis <strong>{lesson.title}</strong>!
             </p>
 
@@ -706,29 +699,31 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '40px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              gap: 'clamp(16px, 4vw, 40px)',
               backgroundColor: 'var(--accent-tint)',
               border: '2px solid var(--accent-blue)',
               borderRadius: 'var(--radius-xl)',
-              padding: '24px 40px',
-              marginBottom: '36px'
+              padding: 'clamp(16px, 3vw, 24px) clamp(20px, 4vw, 40px)',
+              marginBottom: '32px'
             }}>
               <div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>
                   Skor Kuis
                 </div>
-                <div style={{ fontSize: '2.6rem', fontWeight: 800, color: 'var(--primary-blue)' }}>
+                <div style={{ fontSize: 'clamp(2rem, 5vw, 2.6rem)', fontWeight: 800, color: 'var(--primary-blue)' }}>
                   {quizScore.score}%
                 </div>
               </div>
 
-              <div style={{ width: '2px', height: '50px', backgroundColor: 'var(--accent-blue)' }} />
+              <div className="score-ring-divider" style={{ width: '2px', height: '40px', backgroundColor: 'var(--accent-blue)' }} />
 
               <div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>
                   Poin Diraih
                 </div>
-                <div style={{ fontSize: '2.6rem', fontWeight: 800, color: '#D97706' }}>
+                <div style={{ fontSize: 'clamp(2rem, 5vw, 2.6rem)', fontWeight: 800, color: '#D97706' }}>
                   +{quizScore.points_earned || 20} ⭐
                 </div>
               </div>

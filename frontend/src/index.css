@@ -188,6 +188,9 @@ button {
 
 /* Card Styles */
 .kids-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--bg-card);
   border-radius: var(--radius-xl);
   padding: 28px;
@@ -290,11 +293,370 @@ button {
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
   gap: 28px;
   align-items: start;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 @media (max-width: 960px) {
   .dashboard-two-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 22px;
   }
 }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN SYSTEM & MODERN ADAPTIVE UTILITIES
+   ========================================================================== */
+
+/* Container responsiveness */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Card & Button responsiveness */
+@media (max-width: 640px) {
+  .kids-card {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.92rem;
+    gap: 8px;
+  }
+  .btn-lg {
+    padding: 12px 22px;
+    font-size: 0.98rem;
+  }
+}
+
+/* Responsive Grids */
+.rp-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px;
+}
+
+.rp-grid-subjects {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 960px) {
+  .rp-grid-subjects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rp-grid-subjects {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.rp-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .rp-profile-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* Responsive Navbar */
+.nav-desktop-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  margin: 0 16px;
+}
+
+/* Nav User Profile Button */
+.nav-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  padding: 5px 12px 5px 6px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.nav-user-btn:hover {
+  background: var(--accent-tint);
+  border-color: var(--accent-blue);
+}
+
+.nav-user-btn.active {
+  background: var(--accent-tint);
+  border-color: var(--primary-blue);
+}
+
+.nav-mobile-toggle {
+  display: none;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-light);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.nav-mobile-toggle:hover {
+  background: var(--accent-tint);
+  border-color: var(--accent-blue);
+  color: var(--primary-blue);
+}
+
+@media (max-width: 768px) {
+  .nav-desktop-links {
+    display: none !important;
+  }
+  .nav-brand-tagline {
+    display: none !important;
+  }
+  .nav-user-text {
+    display: none !important;
+  }
+  .nav-user-chevron {
+    display: none !important;
+  }
+  .nav-user-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-md) !important;
+    border: 1.5px solid var(--border-light) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .nav-mobile-toggle {
+    display: flex !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-md) !important;
+    border: 1.5px solid var(--border-light) !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Streak Flame Card Responsive */
+.streak-flame-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.streak-flame-days {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .streak-flame-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 18px !important;
+    padding: 20px 16px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .streak-flame-days {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* Activity item responsive */
+.activity-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+@media (max-width: 580px) {
+  .activity-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .activity-item-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #F1F5F9;
+    padding-top: 10px;
+  }
+}
+
+/* Quiz Option Card Responsive */
+.quiz-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 16px;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .quiz-options-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Landing Page Hero Badges Responsive */
+@media (max-width: 640px) {
+  .hero-badge-top {
+    right: 4px !important;
+    top: -8px !important;
+    padding: 6px 12px !important;
+  }
+  .hero-badge-bottom {
+    left: 4px !important;
+    bottom: -10px !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* ==========================================================================
+   BREAKPOINTS REFINEMENT (320px, 375px, 390px, 425px, 768px, 1024px, 1440px+)
+   ========================================================================== */
+
+/* Global element boundary enforcement */
+img, iframe, video {
+  max-width: 100%;
+}
+
+.btn {
+  max-width: 100%;
+}
+
+/* 320px - 360px Ultra Compact Mobile */
+@media (max-width: 360px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .kids-card {
+    padding: 16px 12px;
+  }
+  .btn {
+    padding: 9px 14px;
+    font-size: 0.88rem;
+    gap: 6px;
+  }
+  .btn-lg {
+    padding: 11px 16px;
+    font-size: 0.92rem;
+  }
+}
+
+/* 480px Mobile Header & Auth */
+@media (max-width: 540px) {
+  .nav-auth-desktop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-brand-logo {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 12px !important;
+  }
+  .nav-brand-title {
+    font-size: 1.18rem !important;
+  }
+  .streak-day-circle {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.68rem !important;
+  }
+  .score-ring-divider {
+    display: none !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+  }
+  .nav-brand-title {
+    font-size: 1.05rem !important;
+  }
+  .streak-day-circle {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.65rem !important;
+  }
+}
+
+/* Explore Page Lesson Card Mobile Optimization */
+@media (max-width: 580px) {
+  .lesson-list-item-action {
+    width: 100% !important;
+    justify-content: space-between !important;
+    border-top: 1px solid #F1F5F9;
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+}
+
+
 

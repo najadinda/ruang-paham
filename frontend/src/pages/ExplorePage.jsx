@@ -16,12 +16,12 @@ import {
   Play, 
   ArrowLeft,
   ChevronRight,
-  BookMarked,
   AlertCircle,
   RotateCcw
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
   const navigate = useNavigate();
@@ -136,18 +136,19 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
               <div style={{
                 background: `linear-gradient(135deg, ${activeSubject.theme_color || 'var(--primary-blue)'} 0%, #1E3A8A 100%)`,
                 borderRadius: 'var(--radius-xl)',
-                padding: '36px',
+                padding: 'clamp(20px, 4vw, 36px)',
                 color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '24px',
+                flexWrap: 'wrap',
+                gap: '20px',
                 marginBottom: '40px',
                 boxShadow: '0 12px 30px rgba(59, 130, 246, 0.25)'
               }}>
                 <div style={{
-                  width: '76px',
-                  height: '76px',
-                  borderRadius: '24px',
+                  width: '70px',
+                  height: '70px',
+                  borderRadius: '22px',
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   backdropFilter: 'blur(8px)',
                   display: 'flex',
@@ -155,11 +156,11 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  {getSubjectIcon(activeSubject.icon, 40, '#FFFFFF')}
+                  {getSubjectIcon(activeSubject.icon, 38, '#FFFFFF')}
                 </div>
-                <div>
+                <div style={{ minWidth: 0, flex: '1 1 240px' }}>
                   <div style={{
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '1px',
@@ -168,10 +169,10 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                   }}>
                     Daftar Urutan Materi • {selectedGrade === 'all' ? 'Semua Tingkat' : `Kelas ${selectedGrade} SD`}
                   </div>
-                  <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 800, color: '#FFFFFF', margin: 0, lineHeight: 1.25 }}>
                     {activeSubject.name}
                   </h1>
-                  <p style={{ fontSize: '1rem', opacity: 0.9, marginTop: '8px', maxWidth: '640px' }}>
+                  <p style={{ fontSize: '0.94rem', opacity: 0.9, marginTop: '8px', maxWidth: '640px', lineHeight: 1.5 }}>
                     {activeSubject.description}
                   </p>
                 </div>
@@ -183,10 +184,7 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
               </h2>
 
               {loadingLessons ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <Sparkles size={32} color="var(--primary-blue)" />
-                  <p style={{ marginTop: '10px', color: 'var(--text-muted)' }}>Memuat bab materi...</p>
-                </div>
+                <LoadingScreen inline size={44} text="Memuat bab materi..." padding="30px 10px" />
               ) : errorLessons ? (
                 <div className="kids-card" style={{ textAlign: 'center', padding: '40px', border: '2px dashed #FCA5A5' }}>
                   <AlertCircle size={36} color="var(--error-red)" style={{ margin: '0 auto 12px' }} />
@@ -217,12 +215,13 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                         whileHover={{ y: -3, scale: 1.005 }}
                         className="kids-card"
                         style={{
-                          padding: '24px 28px',
+                          padding: 'clamp(16px, 3vw, 24px)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '20px',
+                          gap: '16px',
                           cursor: 'pointer',
+                          flexWrap: 'wrap',
                           borderLeft: `8px solid ${isCompleted ? 'var(--success-green)' : isInProgress ? '#F59E0B' : 'var(--accent-blue)'}`
                         }}
                         onClick={() => {
@@ -230,10 +229,10 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                           navigate(`/materi/${lesson.id}`);
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1 1 260px', minWidth: 0 }}>
                           <div style={{
-                            width: '50px',
-                            height: '50px',
+                            width: '48px',
+                            height: '48px',
                             borderRadius: '16px',
                             backgroundColor: isCompleted ? 'var(--success-light)' : isInProgress ? '#FEF3C7' : 'var(--accent-tint)',
                             color: isCompleted ? 'var(--success-green)' : isInProgress ? '#D97706' : 'var(--primary-blue)',
@@ -241,27 +240,27 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontWeight: 800,
-                            fontSize: '1.2rem',
+                            fontSize: '1.1rem',
                             flexShrink: 0
                           }}>
-                            {isCompleted ? <CheckCircle size={26} /> : `Bab ${lesson.chapter_number}`}
+                            {isCompleted ? <CheckCircle size={24} /> : `Bab ${lesson.chapter_number}`}
                           </div>
 
-                          <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                              <h3 style={{ fontSize: '1.12rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
                                 {lesson.title}
                               </h3>
-                              {isCompleted && <span className="badge badge-green">Selesai</span>}
-                              {isInProgress && <span className="badge badge-orange">Sedang Belajar</span>}
+                              {isCompleted && <span className="badge badge-green" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>Selesai</span>}
+                              {isInProgress && <span className="badge badge-orange" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>Sedang Belajar</span>}
                             </div>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
+                            <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.45 }}>
                               {lesson.summary}
                             </p>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+                        <div className="lesson-list-item-action" style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, marginLeft: 'auto', flexWrap: 'wrap' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                             <Clock size={16} />
                             <span>{lesson.duration_minutes || 10} menit</span>
@@ -269,9 +268,9 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
 
                           <button
                             className={`btn ${isCompleted ? 'btn-outline' : 'btn-primary'}`}
-                            style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+                            style={{ padding: '8px 18px', fontSize: '0.88rem' }}
                           >
-                            <Play size={16} fill={isCompleted ? 'none' : '#FFFFFF'} />
+                            <Play size={15} fill={isCompleted ? 'none' : '#FFFFFF'} />
                             <span>{isCompleted ? 'Ulangi Materi' : 'Mulai Belajar'}</span>
                           </button>
                         </div>
@@ -294,7 +293,7 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                 <span className="badge badge-blue" style={{ marginBottom: '12px' }}>
                   Jelajahi Mata Pelajaran
                 </span>
-                <h1 style={{ fontSize: '2.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
+                <h1 style={{ fontSize: 'clamp(1.4rem, 4.5vw, 2.1rem)', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
                   Pilih Kelas & Materi Favoritmu
                 </h1>
                 <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400 }}>
@@ -319,9 +318,9 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
                       whileTap={{ scale: 0.96 }}
                       onClick={() => setSelectedGrade(g.id)}
                       style={{
-                        padding: '11px 22px',
+                        padding: 'clamp(8px, 2vw, 11px) clamp(14px, 3vw, 22px)',
                         borderRadius: 'var(--radius-full)',
-                        fontSize: '0.94rem',
+                        fontSize: 'clamp(0.82rem, 2.5vw, 0.94rem)',
                         fontWeight: 600,
                         backgroundColor: isSelected ? 'var(--primary-blue)' : '#FFFFFF',
                         color: isSelected ? '#FFFFFF' : 'var(--text-main)',
@@ -339,16 +338,9 @@ export function ExplorePage({ onOpenLesson, initialSubjectId = null }) {
 
               {/* 3.5 Grid Mata Pelajaran */}
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '60px' }}>
-                  <Sparkles size={36} color="var(--primary-blue)" />
-                  <p style={{ marginTop: '12px', color: 'var(--text-muted)' }}>Memuat mata pelajaran...</p>
-                </div>
+                <LoadingScreen inline size={52} text="Memuat mata pelajaran..." padding="50px 10px" />
               ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                  gap: '26px'
-                }}>
+                <div className="rp-grid-subjects">
                   {subjects.map((subj) => (
                     <motion.div
                       key={subj.id}

@@ -13,8 +13,8 @@ export function Footer() {
       <div className="container">
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '40px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
+          gap: 'clamp(24px, 4vw, 40px)',
           marginBottom: '40px'
         }}>
           {/* Brand Info */}

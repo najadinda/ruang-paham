@@ -5,8 +5,6 @@ import {
   GraduationCap, 
   Lock, 
   Sparkles, 
-  Flame, 
-  Award, 
   CheckCircle, 
   ShieldCheck, 
   Check, 
@@ -140,16 +138,11 @@ export function ProfilePage() {
             Sebelah Kiri: Nama profil, avatar, info & statistik
             Sebelah Kanan: Edit profil form & pemilihan avatar
             ========================================================================= */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '28px',
-          alignItems: 'start'
-        }}>
+        <div className="rp-profile-layout">
           {/* ==================== KOLOM KIRI: NAMA PROFIL & STATISTIK ==================== */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Card Info Siswa */}
-            <div className="kids-card" style={{ padding: '30px' }}>
+            <div className="kids-card" style={{ padding: 'clamp(18px, 4vw, 30px)' }}>
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -174,8 +167,8 @@ export function ProfilePage() {
               {/* Grid 4 Statistik Siswa */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 96px), 1fr))',
+                gap: '10px',
                 paddingTop: '20px',
                 borderTop: '1px solid #F1F5F9'
               }}>
@@ -268,7 +261,7 @@ export function ProfilePage() {
           </div>
 
           {/* ==================== KOLOM KANAN: EDIT PROFIL ==================== */}
-          <div className="kids-card" style={{ padding: '30px' }}>
+          <div className="kids-card" style={{ padding: 'clamp(18px, 4vw, 30px)' }}>
             <div style={{ marginBottom: '24px' }}>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-main)', margin: '0 0 4px 0' }}>
                 Edit Profil
@@ -288,7 +281,7 @@ export function ProfilePage() {
 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 68px), 1fr))',
                   gap: '10px'
                 }}>
                   {AVATAR_OPTIONS.map((av) => {

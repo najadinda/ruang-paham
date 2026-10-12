@@ -10,7 +10,6 @@ import {
   Atom, 
   Calculator, 
   BookOpen, 
-  Globe, 
   ShieldCheck, 
   Languages,
   Palette,
@@ -149,9 +148,9 @@ export function LandingPage({ setActivePage }) {
 
         <div className="container" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
           alignItems: 'center',
-          gap: '50px'
+          gap: 'clamp(28px, 5vw, 50px)'
         }}>
           {/* Left Hero Content */}
           <motion.div
@@ -229,7 +228,7 @@ export function LandingPage({ setActivePage }) {
               maxWidth: '440px',
               backgroundColor: '#FFFFFF',
               borderRadius: 'var(--radius-xl)',
-              padding: '32px',
+              padding: 'clamp(18px, 4vw, 32px)',
               boxShadow: '0 20px 50px -12px rgba(59, 130, 246, 0.18)',
               border: '2px solid #DBEAFE',
               position: 'relative'
@@ -306,6 +305,7 @@ export function LandingPage({ setActivePage }) {
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="hero-badge-top"
               style={{
                 position: 'absolute',
                 top: '-12px',
@@ -331,6 +331,7 @@ export function LandingPage({ setActivePage }) {
             <motion.div
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              className="hero-badge-bottom"
               style={{
                 position: 'absolute',
                 bottom: '-16px',
@@ -362,7 +363,7 @@ export function LandingPage({ setActivePage }) {
             <span className="badge badge-blue" style={{ marginBottom: '12px' }}>
               Keunggulan Ruang Paham
             </span>
-            <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
               Mengapa Anak-Anak Suka Belajar di Sini?
             </h2>
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400 }}>
@@ -372,8 +373,8 @@ export function LandingPage({ setActivePage }) {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '28px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))',
+            gap: '24px'
           }}>
             {pillars.map((pillar, idx) => (
               <div
@@ -421,7 +422,7 @@ export function LandingPage({ setActivePage }) {
             <span className="badge badge-blue" style={{ marginBottom: '12px' }}>
               Pilihan Mata Pelajaran
             </span>
-            <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 700, color: 'var(--text-main)', marginBottom: '12px' }}>
               Mata Pelajaran Sekolah Dasar
             </h2>
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400 }}>
@@ -429,11 +430,7 @@ export function LandingPage({ setActivePage }) {
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '24px'
-          }}>
+          <div className="rp-grid-subjects">
             {subjectPreviews.map((subj) => (
               <div
                 key={subj.id}
@@ -497,7 +494,7 @@ export function LandingPage({ setActivePage }) {
         textAlign: 'center'
       }}>
         <div className="container" style={{ maxWidth: '680px' }}>
-          <h2 style={{ fontSize: '2.1rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '14px' }}>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 4.5vw, 2.1rem)', fontWeight: 700, color: '#FFFFFF', marginBottom: '14px' }}>
             Siap Menjadi Sahabat Pintar di Ruang Paham?
           </h2>
           <p style={{ fontSize: '1.05rem', opacity: 0.95, lineHeight: 1.6, marginBottom: '28px', fontWeight: 400 }}>
@@ -510,9 +507,9 @@ export function LandingPage({ setActivePage }) {
             style={{
               backgroundColor: '#FFFFFF',
               color: 'var(--primary-blue)',
-              fontSize: '1.08rem',
+              fontSize: 'clamp(0.95rem, 3vw, 1.08rem)',
               fontWeight: 700,
-              padding: '15px 38px',
+              padding: 'clamp(12px, 3vw, 15px) clamp(20px, 5vw, 38px)',
               borderRadius: 'var(--radius-full)',
               boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
               display: 'inline-flex',

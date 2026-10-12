@@ -24,6 +24,12 @@ Route::post('/api/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/api/register', [AuthController::class, 'register']);
 
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/api/forgot-password', [AuthController::class, 'forgotPassword']);
+
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/api/reset-password', [AuthController::class, 'resetPassword']);
+
 // ==========================================
 // 2. RUTE MATA PELAJARAN & MATERI (PUBLIC)
 // ==========================================

@@ -57,7 +57,7 @@ export function RegisterPage({ setActivePage }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '40px 20px',
+      padding: 'clamp(24px, 5vw, 40px) clamp(12px, 3.5vw, 20px)',
       background: 'radial-gradient(ellipse at center, #EFF6FF 0%, #F8FAFC 80%)'
     }}>
       <motion.div
@@ -69,7 +69,7 @@ export function RegisterPage({ setActivePage }) {
           maxWidth: '480px',
           backgroundColor: '#FFFFFF',
           borderRadius: 'var(--radius-xl)',
-          padding: '38px',
+          padding: 'clamp(20px, 5vw, 38px)',
           boxShadow: '0 20px 45px -10px rgba(59, 130, 246, 0.12)',
           border: '2px solid #DBEAFE'
         }}
@@ -143,11 +143,12 @@ export function RegisterPage({ setActivePage }) {
         <form onSubmit={handleSubmit}>
           {/* 1. Nama Lengkap */}
           <div className="form-group">
-            <label className="form-label">
+            <label htmlFor="reg-name" className="form-label">
               <User size={17} color="var(--primary-blue)" />
               Nama Lengkap
             </label>
             <input
+              id="reg-name"
               type="text"
               className="form-input"
               placeholder="Contoh: Budi Pratama"
@@ -159,11 +160,12 @@ export function RegisterPage({ setActivePage }) {
 
           {/* 2. Email */}
           <div className="form-group">
-            <label className="form-label">
+            <label htmlFor="reg-email" className="form-label">
               <Mail size={17} color="var(--primary-blue)" />
               Email
             </label>
             <input
+              id="reg-email"
               type="email"
               className="form-input"
               placeholder="nama@email.com"
@@ -175,11 +177,12 @@ export function RegisterPage({ setActivePage }) {
 
           {/* 3. Dropdown Kelas (1-6) */}
           <div className="form-group">
-            <label className="form-label">
+            <label htmlFor="reg-grade" className="form-label">
               <GraduationCap size={17} color="var(--primary-blue)" />
               Pilih Kelas (SD)
             </label>
             <select
+              id="reg-grade"
               className="form-select"
               value={formData.grade}
               onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
@@ -195,12 +198,13 @@ export function RegisterPage({ setActivePage }) {
 
           {/* 4. Password dengan Icon Mata Toggle */}
           <div className="form-group">
-            <label className="form-label">
+            <label htmlFor="reg-password" className="form-label">
               <Lock size={17} color="var(--primary-blue)" />
               Kata Sandi (Password)
             </label>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
+                id="reg-password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
                 placeholder="Minimal 8 karakter"

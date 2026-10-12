@@ -2,7 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { ChevronDown, User, LogOut } from 'lucide-react';
+import { 
+  ChevronDown, 
+  User, 
+  LogOut, 
+  Menu, 
+  X, 
+  LayoutDashboard, 
+  Compass, 
+  Sparkles 
+} from 'lucide-react';
 import { AvatarDisplay } from '../utils/avatars';
 
 export function Navbar() {
@@ -10,6 +19,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicked outside
@@ -22,6 +32,11 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleAnchorClick = (anchorId) => {
     if (location.pathname !== '/') {
@@ -74,6 +89,7 @@ export function Navbar() {
             <img
               src="/favicon.svg"
               alt="Logo Ruang Paham"
+              className="nav-brand-logo"
               style={{
                 width: '42px',
                 height: '42px',
@@ -83,21 +99,27 @@ export function Navbar() {
               }}
             />
             <div>
-              <div style={{
-                fontSize: '1.35rem',
-                fontWeight: 700,
-                color: 'var(--primary-blue)',
-                letterSpacing: '-0.3px',
-                lineHeight: 1.15
-              }}>
+              <div
+                className="nav-brand-title"
+                style={{
+                  fontSize: '1.35rem',
+                  fontWeight: 700,
+                  color: 'var(--primary-blue)',
+                  letterSpacing: '-0.3px',
+                  lineHeight: 1.15
+                }}
+              >
                 Ruang <span style={{ color: 'var(--text-main)' }}>Paham</span>
               </div>
-              <div style={{
-                fontSize: '0.72rem',
-                fontWeight: 500,
-                color: 'var(--text-muted)',
-                letterSpacing: '0.3px'
-              }}>
+              <div
+                className="nav-brand-tagline"
+                style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  color: 'var(--text-muted)',
+                  letterSpacing: '0.3px'
+                }}
+              >
                 Belajar Makin Seru!
               </div>
             </div>
@@ -105,18 +127,11 @@ export function Navbar() {
         </div>
 
         {/* =========================================================================
-            2. POSISI TENGAH: Navigasi
+            2. POSISI TENGAH: Navigasi Desktop
             - Belum Login (Landing Page): Keunggulan, Jelajahi (beda halaman)
             - Sudah Login (Halaman Siswa): Dashboard, Jelajahi, Profil
             ========================================================= */}
-        <nav style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          flex: '1 1 auto',
-          margin: '0 16px'
-        }}>
+        <nav className="nav-desktop-links">
           {user ? (
             /* =======================================================
                NAVIGASI HALAMAN SISWA (ketika sudah login/register):
@@ -226,26 +241,17 @@ export function Navbar() {
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: dropdownOpen ? 'var(--accent-tint)' : '#FFFFFF',
-                  padding: '6px 14px 6px 8px',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1.5px solid var(--border-light)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
-                }}
+                className={`nav-user-btn ${dropdownOpen ? 'active' : ''}`}
+                aria-haspopup="menu"
+                aria-expanded={dropdownOpen}
               >
-                <AvatarDisplay avatarId={user.avatar} size={38} />
-                <div style={{ textAlign: 'left', lineHeight: 1.25 }}>
+                <AvatarDisplay avatarId={user.avatar} size={32} />
+                <div className="nav-user-text" style={{ textAlign: 'left', lineHeight: 1.25 }}>
                   <div style={{
-                    fontSize: '0.92rem',
+                    fontSize: '0.9rem',
                     fontWeight: 700,
                     color: 'var(--text-main)',
-                    maxWidth: '140px',
+                    maxWidth: '120px',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
@@ -253,7 +259,7 @@ export function Navbar() {
                     {user.name}
                   </div>
                   <div style={{
-                    fontSize: '0.74rem',
+                    fontSize: '0.72rem',
                     fontWeight: 600,
                     color: 'var(--primary-blue)'
                   }}>
@@ -261,8 +267,9 @@ export function Navbar() {
                   </div>
                 </div>
                 <ChevronDown
-                  size={16}
+                  size={15}
                   color="var(--text-muted)"
+                  className="nav-user-chevron"
                   style={{
                     transform: dropdownOpen ? 'rotate(180deg)' : 'none',
                     transition: 'transform 0.2s ease',
@@ -361,13 +368,13 @@ export function Navbar() {
             </div>
           ) : (
             /* Belum Login: Tombol Masuk & Daftar */
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="nav-auth-desktop" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Link
                 to="/login"
                 className="btn btn-outline"
                 style={{
-                  padding: '8px 20px',
-                  fontSize: '0.92rem',
+                  padding: '7px 16px',
+                  fontSize: '0.88rem',
                   fontWeight: 600,
                   textDecoration: 'none'
                 }}
@@ -379,8 +386,8 @@ export function Navbar() {
                 to="/register"
                 className="btn btn-primary"
                 style={{
-                  padding: '8px 22px',
-                  fontSize: '0.92rem',
+                  padding: '7px 18px',
+                  fontSize: '0.88rem',
                   fontWeight: 600,
                   textDecoration: 'none'
                 }}
@@ -389,8 +396,150 @@ export function Navbar() {
               </Link>
             </div>
           )}
+
+          {/* Tombol Hamburger Menu untuk Mobile */}
+          <button
+            type="button"
+            className="nav-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Tutup Menu' : 'Buka Menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+
+      {/* =========================================================================
+          DRAWER NAVIGASI MOBILE (RESPONSIVE DROPDOWN)
+          ========================================================================= */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderTop: '1px solid #EFF6FF',
+              boxShadow: '0 12px 24px rgba(59, 130, 246, 0.08)',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="container" style={{ padding: '16px 20px 24px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      background: location.pathname === '/dashboard' ? 'var(--accent-tint)' : 'transparent',
+                      color: location.pathname === '/dashboard' ? 'var(--primary-blue)' : 'var(--text-main)',
+                      fontWeight: 700,
+                      fontSize: '0.96rem',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <LayoutDashboard size={18} color="var(--primary-blue)" />
+                    <span>Dashboard</span>
+                  </Link>
+
+                  <Link
+                    to="/jelajahi"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      background: (location.pathname === '/jelajahi' || location.pathname.startsWith('/materi')) ? 'var(--accent-tint)' : 'transparent',
+                      color: (location.pathname === '/jelajahi' || location.pathname.startsWith('/materi')) ? 'var(--primary-blue)' : 'var(--text-main)',
+                      fontWeight: 700,
+                      fontSize: '0.96rem',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <Compass size={18} color="var(--primary-blue)" />
+                    <span>Jelajahi Mata Pelajaran</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleAnchorClick('keunggulan');
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      background: 'transparent',
+                      color: 'var(--text-main)',
+                      fontWeight: 600,
+                      fontSize: '0.96rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <Sparkles size={18} color="var(--primary-blue)" />
+                    <span>Keunggulan</span>
+                  </button>
+
+                  <Link
+                    to="/jelajahi"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      background: location.pathname === '/jelajahi' ? 'var(--accent-tint)' : 'transparent',
+                      color: location.pathname === '/jelajahi' ? 'var(--primary-blue)' : 'var(--text-main)',
+                      fontWeight: 600,
+                      fontSize: '0.96rem',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <Compass size={18} color="var(--primary-blue)" />
+                    <span>Jelajahi</span>
+                  </Link>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn btn-outline"
+                      style={{ textAlign: 'center', padding: '10px 14px', fontSize: '0.92rem' }}
+                    >
+                      Masuk
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="btn btn-primary"
+                      style={{ textAlign: 'center', padding: '10px 14px', fontSize: '0.92rem' }}
+                    >
+                      Daftar
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
