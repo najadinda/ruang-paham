@@ -58,7 +58,7 @@ ruang-paham/
 ## 🚀 Panduan Menjalankan Proyek
 
 ### Cara Menjalankan:
-Cukup jalankan Laravel backend (atau buka via Laragon):
+Cukup jalankan Laravel frontend:
 ```bash
 cd d:\laragon\www\ruang-paham\frontend
 npm install
@@ -67,20 +67,7 @@ npm run dev
 
 ### 🌐 Akses Website:
 Buka di browser:
-👉 **`http://127.0.0.1:8000`** *(atau `http://localhost:8000`)*
-
-*(Frontend dan Backend berjalan bersamaan dalam 1 server Laravel, tanpa perlu file script tambahan)*
-
----
-
-## 👥 Akun Uji Coba (Seeded Demo Accounts)
-
-| Nama Siswa | Email | Password | Kelas | Catatan |
-| :--- | :--- | :--- | :--- | :--- |
-| **Budi Pratama** | `budi@ruangpaham.id` | `password123` | Kelas 3 SD | Siswa aktif (Streak 5 hari 🔥, 140 ⭐, untuk uji coba Kondisi 1 Lanjutkan Belajar) |
-| **Siti Aisyah** | `siti@ruangpaham.id` | `password123` | Kelas 1 SD | Siswa baru (Streak 1 hari 🔥, 0 ⭐, untuk uji coba Kondisi 2 Empty State "Kamu belum mulai belajar") |
-
----
+👉 **`http://localhost:5173/`**
 
 ## 📑 Dokumentasi & Prompt Log
 Semua catatan arsitektur, analisis kebutuhan, skema tabel database, endpoint API, dan log prompt tersimpan rapi di:  
