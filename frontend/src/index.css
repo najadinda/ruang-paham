@@ -717,5 +717,81 @@ img, iframe, video {
   }
 }
 
+/* =========================================================================
+   LESSON DETAIL PAGE: CATEGORY BADGES & TOPIC BADGES RESPONSIVE
+   Desktop: Layout horizontal (side-by-side) tetap rapi dan konsisten.
+   Responsive (<= 768px):
+   - Category badges (mata pelajaran & kelas) dibuat ke bawah (vertikal).
+   - Topic badge (poin materi: ✨ highlight) dibuat ke bawah judul materi.
+   ========================================================================= */
+.lesson-category-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
 
+.lesson-chunk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
 
+.lesson-chunk-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+  margin: 0;
+}
+
+.lesson-topic-badge {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .lesson-header-card {
+    padding: 22px 18px !important;
+  }
+
+  .lesson-category-badges {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .lesson-category-badges .badge {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+  }
+
+  .lesson-chunk-card {
+    padding: 18px 16px !important;
+  }
+
+  .lesson-chunk-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .lesson-chunk-title {
+    font-size: 1.15rem !important;
+    width: 100% !important;
+    line-height: 1.35 !important;
+  }
+
+  .lesson-topic-badge {
+    align-self: flex-start !important;
+    display: inline-flex !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    text-align: left !important;
+    line-height: 1.35 !important;
+  }
+}

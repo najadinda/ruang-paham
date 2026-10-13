@@ -10,7 +10,8 @@ import {
   X, 
   LayoutDashboard, 
   Compass, 
-  Sparkles 
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import { AvatarDisplay } from '../utils/avatars';
 
@@ -22,11 +23,11 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Navigasi siswa (Dashboard, Jelajahi, Profil) HANYA aktif jika SUDAH login dan berada di rute halaman siswa (/dashboard, /jelajahi, /materi, /profil)
-  // Di halaman publik (Landing Page '/', '/login', '/register'), SELALU tampilkan navigasi publik (Keunggulan, Jelajahi, Masuk, Daftar)
+  // Navigasi siswa (Dashboard, Jelajahi, Profil, Aktivitas) HANYA aktif jika SUDAH login dan berada di rute halaman siswa
   const isStudentPage = location.pathname.startsWith('/dashboard') || 
                         location.pathname.startsWith('/jelajahi') || 
                         location.pathname.startsWith('/materi') || 
+                        location.pathname.startsWith('/aktivitas') || 
                         location.pathname.startsWith('/profil');
   const showStudentNav = !!user && isStudentPage;
 
@@ -341,6 +342,31 @@ export function Navbar() {
                       <span>Pengaturan Profil</span>
                     </button>
 
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/aktivitas');
+                      }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '9px 12px',
+                        borderRadius: 'var(--radius-md)',
+                        background: location.pathname === '/aktivitas' ? 'var(--accent-tint)' : 'transparent',
+                        color: location.pathname === '/aktivitas' ? 'var(--primary-blue)' : 'var(--text-main)',
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        textAlign: 'left',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Clock size={16} color="var(--primary-blue)" />
+                      <span>Riwayat Aktivitas</span>
+                    </button>
+
                     <div style={{ height: '1px', backgroundColor: '#F1F5F9', margin: '4px 0' }} />
 
                     {/* Tombol Logout: Ketika diklik, langsung logout dan arahkan ke login page */}
@@ -471,6 +497,26 @@ export function Navbar() {
                   >
                     <Compass size={18} color="var(--primary-blue)" />
                     <span>Jelajahi Mata Pelajaran</span>
+                  </Link>
+
+                  <Link
+                    to="/aktivitas"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-lg)',
+                      background: location.pathname === '/aktivitas' ? 'var(--accent-tint)' : 'transparent',
+                      color: location.pathname === '/aktivitas' ? 'var(--primary-blue)' : 'var(--text-main)',
+                      fontWeight: 700,
+                      fontSize: '0.96rem',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <Clock size={18} color="var(--primary-blue)" />
+                    <span>Riwayat Aktivitas</span>
                   </Link>
                 </>
               ) : (

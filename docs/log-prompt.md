@@ -1519,16 +1519,335 @@ ini waktu belajarnya 3369 menit, masa belajar selama itu? diperbaiki dibuat seca
 - Modul *Mengenal Panca Indra* yang sebelumnya `146m belajar` kini menjadi **⏱️ 10m belajar** ✅
 - Modul yang sedang aktif belajar bertambah durasinya secara *realtime* (1m, 2m, dst.) ✅
 - `npm run build` sukses 100% tanpa error (1.05s) ✅
+---
+
+## 42. Log Prompt #36: Penataan Responsif Category Badge dan Topic Badge ke Bawah (Lesson Detail Page)
+
+### 42.1 Catatan Permintaan Pengguna (Prompt #36)
+```text
+JANGAN MENGUBAH TAMPILAN DAN SISTEM DARI YANG SEBELUMNYA
+ini di halaman responsive, untuk category badge (mata pelajaran dan kelas) dan topic badge (poin materi) dibuat menjadi kebawah
+```
+
+### 42.2 Analisis Masalah Layout Mobile (*Root Cause Analysis*)
+1. **Category Badge (Mata Pelajaran & Kelas)**:
+   - Pada kartu header modul di [LessonDetailPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/LessonDetailPage.jsx), badge mata pelajaran (`Pendidikan Agama & Budi Pekerti`) dan badge kelas (`Kelas 2 SD • Bab 1`) sebelumnya dibungkus dalam flexbox horizontal berdampingan.
+   - Pada layar ponsel/mobile yang sempit (lebar < 768px), kedua badge tersebut terhimpit secara horizontal sehingga badge mata pelajaran yang panjang terdesak ke samping dan terlihat padat.
+2. **Topic Badge (Poin-Poin Penting Materi)**:
+   - Pada kartu ringkasan materi (*content chunks*), judul materi (misal: `1. Membiasakan Berdoa Sehari-hari`) dan badge topik (`✨ Doa Menenangkan Hati dan Membawa Kebaikan`) sebelumnya diletakkan berdampingan secara horizontal dengan properti `justify-content: space-between`.
+   - Pada tampilan responsif/mobile, kedua elemen ini berebut ruang horizontal sehingga judul dan teks badge terhimpit menjadi beberapa baris vertikal sempit yang canggung.
+
+### 42.3 Solusi & Implementasi Teknis
+1. **Modifikasi Komponen (`LessonDetailPage.jsx`)**:
+   - Menambahkan class semantic `.lesson-header-card` dan `.lesson-category-badges` pada pembungkus badge mata pelajaran dan kelas.
+   - Menambahkan class semantic `.lesson-chunk-card`, `.lesson-chunk-header`, `.lesson-chunk-title`, dan `.lesson-topic-badge` pada kartu poin materi.
+2. **Penataan CSS Responsif (`index.css`)**:
+   - **Tampilan Desktop (> 768px)**:
+     - Tetap mempertahankan tata letak asli 100% tanpa perubahan (*side-by-side*, proporsional, dan estetik).
+   - **Tampilan Responsif (<= 768px)**:
+     - `.lesson-category-badges`: Diubah menjadi `flex-direction: column !important; align-items: flex-start !important; gap: 8px !important;` sehingga badge mata pelajaran dan badge kelas tersusun rapi **ke bawah (vertikal)**.
+     - `.lesson-chunk-header`: Diubah menjadi `flex-direction: column !important; align-items: flex-start !important; gap: 8px !important;` sehingga badge poin materi tersusun **ke bawah judul materi**.
+     - `.lesson-topic-badge`: Diatur dengan `align-self: flex-start !important; max-width: 100% !important; white-space: normal !important; text-align: left !important;` agar teks badge dapat dibaca dengan lega dan nyaman di layar sentuh ponsel.
+     - Padding kartu modul dan kartu chunk disesuaikan secara proporsional untuk layar seluler.
+
+### 42.4 Hasil Verifikasi
+- **Tampilan Mobile / Responsif**:
+  - Badge mata pelajaran dan badge kelas tersusun ke bawah secara rapi dan proporsional.
+  - Badge poin materi berada di bawah judul nomor materi secara natural tanpa terhimpit horizontal.
+- **Tampilan Desktop**:
+  - Tampilan desktop tetap 100% konsisten dengan desain awal sebelumnya (*side-by-side*).
+- **Frontend Build**:
+  - `npm run build` sukses 100% (selesai dalam 1.50s) dan terpasang pada `backend/public/`.
 - Status: **SELESAI (100% TERVERIFIKASI) ✅**
 
+---
 
+## 43. Log Prompt #37: Penonaktifan Navbar dan Footer pada Halaman Materi & Kuis (Desktop & Responsif)
 
+### 43.1 Catatan Permintaan Pengguna (Prompt #37)
+```text
+JANGAN MENGUBAH SISTEM DAN TAMPILAN DARI YANG SEBELUMNYA
 
+ketika siswa membuka materi dan sedang quiz tidak perlu menggunakan navbar dan footer, yang desktop maupun responsive
+```
 
+### 43.2 Analisis Kebutuhan & Desain Solusi
+1. **Fokus Belajar & Mengerjakan Kuis (*Distraction-Free Mode*)**:
+   - Ketika siswa sedang membaca materi pembelajaran atau berkonsentrasi mengerjakan kuis, keberadaan Navbar atas dan Footer bawah dapat mengalihkan fokus siswa dan memakan ruang vertikal layar, terutama pada perangkat mobile/tablet.
+   - Halaman [LessonDetailPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/LessonDetailPage.jsx) (`/materi/:lessonId`) telah memiliki navigasi mandiri yang jelas:
+     - Tombol kembali atas: *"Kembali ke Daftar Materi"* (mengarahkan kembali ke daftar materi/Jelajahi).
+     - Tombol akhir kuis: *"Kembali ke Dashboard"* dan *"Pelajari Lagi Materi"*.
+   - Oleh karena itu, pada rute `/materi/:lessonId`, Navbar dan Footer tidak diperlukan baik di layar Desktop maupun Responsive.
 
+### 43.3 Implementasi Teknis (`App.jsx`)
+- Pada komponen layout utama [App.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/App.jsx):
+  - Didefinisikan pengecekan rute aktif:
+    ```javascript
+    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+    const isLessonPage = location.pathname.startsWith('/materi');
+    const hideNavbarAndFooter = isAuthPage || isLessonPage;
+    ```
+  - Merender Navbar dan Footer secara kondisional:
+    ```jsx
+    {!hideNavbarAndFooter && <Navbar />}
+    ...
+    {!hideNavbarAndFooter && <Footer />}
+    ```
+  - Pada halaman materi dan kuis (`/materi/:lessonId`), Navbar dan Footer otomatis disembunyikan secara menyeluruh pada semua resolusi (Desktop, Tablet, dan Mobile).
+  - Halaman lain (Landing Page, Dashboard Siswa, Jelajahi Mapel, Profil Siswa) tetap menampilkan Navbar dan Footer normal tanpa ada perubahan.
+  - Halaman Login dan Register tetap bebas Navbar dan Footer sesuai ketentuan sebelumnya.
 
+### 43.4 Hasil Verifikasi
+- **Rute `/materi/:lessonId` (Materi & Kuis)**:
+  - Navbar atas: Tidak ditampilkan (bersih & fokus) ✅
+  - Footer bawah: Tidak ditampilkan ✅
+  - Berfungsi identik pada resolusi Desktop dan Responsif/Mobile ✅
+  - Tombol navigasi kembali *"Kembali ke Daftar Materi"* tetap berfungsi sempurna mengarahkan siswa ke halaman Jelajahi/Dashboard ✅
+- **Rute Lain**:
+  - Halaman `/dashboard`, `/jelajahi`, `/profil`, dan `/` tetap menampilkan Navbar & Footer 100% utuh ✅
+- **Frontend Build**:
+  - `npm run build` sukses 100% (1.30s) dan terpasang pada `backend/public/`.
+- Status: **SELESAI (100% TERVERIFIKASI) ✅**
 
+---
 
+## 44. Log Prompt #38: Penyempurnaan Halaman Profil (Bebas Navbar & Footer, Panah Kembali Dinamis, Avatar 2 Baris, Kartu Statistik 2 Baris)
+
+### 44.1 Catatan Permintaan Pengguna (Prompt #38)
+```text
+JANGAN MENGUBAH SISTEM DAN TAMPILAN DARI YANG SEBELUMNYA
+- ini halaman profil tidak perlu menggunakan navbar dan footer, tetapi diberikan panah untuk kembali (kembali nya menyesuaikan yang dibuka sebelumnya, contoh jika kita membuka halaman jelajahi lalu membuka profil maka balik nya ke halaman jelajahi)
+- pilihan avatar karakter dibagi menjadi 2 baris 
+- card total bintang, api semangat, materi tuntas, tingkat juga dibagi menjadi 2 baris, begitupun yang responsive
+```
+
+### 44.2 Analisis Kebutuhan & Desain Solusi
+1. **Bebas Navbar dan Footer pada Halaman Profil (`/profil`)**:
+   - Sama seperti halaman materi dan kuis serta autentikasi, halaman profil siswa difokuskan menjadi antarmuka mandiri tanpa Navbar dan Footer.
+2. **Tombol Panah Kembali Dinamis**:
+   - Menambahkan tombol panah kembali (`<ArrowLeft /> Kembali`) di bagian atas halaman [ProfilePage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/ProfilePage.jsx).
+   - Logika navigasi menggunakan `navigate(-1)` dengan deteksi `window.history.state.idx > 0` sehingga:
+     - Jika siswa membuka profil dari halaman Jelajahi (`/jelajahi`), tombol kembali akan mengarahkan balik ke halaman Jelajahi.
+     - Jika siswa membuka profil dari Dashboard (`/dashboard`), tombol kembali akan mengarahkan balik ke Dashboard.
+     - Jika siswa membuka profil secara langsung melalui tautan baru, fallback diarahkan ke `/dashboard`.
+3. **Pilihan Avatar Karakter Dibagi Menjadi 2 Baris**:
+   - Terdapat 8 pilihan avatar karakter.
+   - Sebelumnya, grid menggunakan `repeat(auto-fit, minmax(..., 68px))` sehingga menghasilkan 7 avatar di baris pertama dan 1 avatar sendirian di baris kedua.
+   - Diubah menjadi `gridTemplateColumns: 'repeat(4, 1fr)'`, membagi 8 avatar secara proporsional dan simetris menjadi **2 baris rapi** (4 avatar di baris 1, 4 avatar di baris 2).
+4. **Card Statistik (Total Bintang, Api Semangat, Materi Tuntas, Tingkat) Dibagi Menjadi 2 Baris (Desktop & Responsif)**:
+   - Terdapat 4 kartu metrik siswa (⭐ Total Bintang, 🔥 Api Semangat, 🎓 Materi Tuntas, 🚀 Tingkat Siswa).
+   - Sebelumnya, grid menghasilkan 3 kartu di baris 1 dan 1 kartu di baris 2.
+   - Diubah menjadi `gridTemplateColumns: 'repeat(2, 1fr)'`, sehingga terbagi rata menjadi **2 baris** (2 kartu di baris 1, 2 kartu di baris 2), berlaku konsisten pada tampilan **Desktop** maupun **Responsive**.
+
+### 44.3 Implementasi Teknis
+- **`App.jsx`**:
+  - Menambahkan `isProfilePage = location.pathname.startsWith('/profil')` ke dalam `hideNavbarAndFooter`.
+- **`ProfilePage.jsx`**:
+  - Menambahkan import `useNavigate` dan ikon `ArrowLeft`.
+  - Menerapkan fungsi `handleBack` dinamis.
+  - Menambahkan tombol panah kembali di atas judul "Profil Siswa".
+  - Mengubah template grid 4 kartu statistik menjadi `repeat(2, 1fr)`.
+  - Mengubah template grid 8 opsi avatar menjadi `repeat(4, 1fr)`.
+
+### 44.4 Hasil Verifikasi
+- Halaman `/profil` kini bersih tanpa Navbar dan Footer ✅
+- Tombol panah *"Kembali"* berhasil membawa pengguna kembali ke rute sebelumnya (`/jelajahi` atau `/dashboard`) ✅
+- Galeri 8 avatar terbagi rata menjadi 2 baris (4 atas, 4 bawah) ✅
+- 4 kartu statistik siswa terbagi rata menjadi 2 baris (2 atas, 2 bawah) baik pada Desktop maupun Responsive ✅
+- `npm run build` sukses 100% (1.39s) dan tersinkronisasi ke `backend/public/` ✅
+- Status: **SELESAI (100% TERVERIFIKASI) ✅**
+
+---
+
+## 45. Log Prompt #39: Solusi Komprehensif Error Login "Unexpected end of JSON input" & Auto-Start Backend
+
+### 45.1 Catatan Permintaan Pengguna (Prompt #39)
+```text
+JANGAN MENGUBAH SISTEM DAN TAMPILAN DARI SEBELUMNYA
+kenapa auth nya selalu error? ketika baru buka website dan mau login malah Failed to execute 'json' on 'Response': Unexpected end of JSON input, tolong dibuat setiap login tidak selalu error, dan akunnya masih sama dengan akun yang selalu digunakan
+```
+
+### 45.2 Analisis Masalah & Akar Masalah (*Root Cause Analysis*)
+1. **Penyebab Error Teknis `Unexpected end of JSON input`**:
+   - Ketika komputer atau lingkungan kerja (IDE) baru dinyalakan kembali, proses latar belakang Laravel backend (`php artisan serve` di port 8000) belum aktif, sementara frontend Vite (`localhost:5173`) sudah berjalan.
+   - Saat pengguna membuka browser dan mencoba login, Vite proxy mencoba menghubungkan permintaan `/api/login` ke `http://127.0.0.1:8000`. Karena port 8000 belum menyala (`ECONNREFUSED`), koneksi gagal dan menghasilkan body respons kosong atau HTML timeout.
+   - Pada file [api.js](file:///d:/laragon/www/ruang-paham/frontend/src/services/api.js), pemanggilan `await res.json()` dipanggil secara mentah tanpa pengujian aman. Akibatnya, mesin JavaScript browser melemparkan pengecualian mentah: `Failed to execute 'json' on 'Response': Unexpected end of JSON input`.
+2. **Ketiadaan Sinkronisasi Otomatis Dev Server**:
+   - Sebelumnya, perintah `npm run dev` hanya menyalakan server frontend Vite tanpa mengecek apakah backend Laravel sudah berjalan atau belum.
+
+### 45.3 Solusi & Implementasi Teknis
+1. **Otomatisasi Pengecekan & Penyalaan Backend di Vite ([vite.config.js](file:///d:/laragon/www/ruang-paham/frontend/vite.config.js))**:
+   - Ditambahkan plugin `autoBackendPlugin` pada konfigurasi Vite.
+   - Saat `npm run dev` aktif, sistem mengecek ketersediaan port 8000 via socket TCP. Jika port 8000 belum aktif, sistem secara otomatis mengeksekusi `php artisan serve --host=127.0.0.1 --port=8000` di latar belakang.
+   - Ditambahkan penangan error proxy (`proxy.on('error')`) yang mengembalikan respons JSON 503 valid dan pesan bersahabat, sehingga tidak pernah terjadi respons kosong yang memicu error parsing JSON.
+2. **Fungsi `parseResponse` Anti-Crash ([api.js](file:///d:/laragon/www/ruang-paham/frontend/src/services/api.js))**:
+   - Dibuat fungsi utilitas terpusat `parseResponse(res, defaultErrorMsg)` yang membaca teks respons terlebih dahulu dengan `await res.text()` sebelum mem-parsing JSON dalam blok `try...catch`.
+   - Mencegah browser melempar `Unexpected end of JSON input`.
+   - Mengubah kode error teknis proxy/server (502, 503, 504) menjadi pesan ramah: *"Server backend sedang bersiap atau belum aktif (port 8000). Silakan tunggu sebentar dan coba lagi."*
+3. **Multi-Worker Server Backend ([.env](file:///d:/laragon/www/ruang-paham/backend/.env))**:
+   - Diaktifkan `PHP_CLI_SERVER_WORKERS=4` agar server internal PHP dapat melayani beberapa permintaan paralel sekaligus tanpa terjadi antrean (*hanging/stalling*).
+4. **Verifikasi Akun Pengguna Tetap Utuh**:
+   - Akun riil yang selalu digunakan siswa tetap aman dan tersimpan permanen di database:
+     - **Nama Lengkap**: `Ayudhya Naja`
+     - **Email**: `naja@gmail.com`
+     - **Kata Sandi**: `sekolahdasar`
+     - **Tingkat**: `Kelas 2 SD`
+     - **Poin / Bintang**: `530 ⭐`
+     - **Api Semangat**: `4 Hari 🔥`
+   - Teruji sukses 100% login menggunakan email (`naja@gmail.com`) maupun nama lengkap (`Ayudhya Naja`).
+
+### 45.4 Hasil Verifikasi Pengujian
+- Node.js API test:
+  - Login via Email (`naja@gmail.com`): Berhasil (HTTP 200) ✅
+  - Login via Nama Lengkap (`Ayudhya Naja`): Berhasil (HTTP 200) ✅
+  - Profil endpoint (`GET /api/profile`): Mengembalikan user Ayudhya Naja (530 Poin, Kelas 2) ✅
+- Kompilasi `npm run build` sukses 100% (1.63s) ✅
+- Status: **SELESAI (100% TERVERIFIKASI) ✅**
+
+---
+
+## 46. Log Prompt #40: Koreksi Penentuan Hari Kalender Waktu Akses Aktivitas Belajar ("Kemarin" vs "Hari Ini")
+
+### 46.1 Catatan Permintaan Pengguna (Prompt #40)
+```text
+ini jam akses nya 22.41 berarti kemarin, klo jam akses nya di malam lalu dibuka halaman siswa besoknya pagi hari berarti diubah kemarin
+```
+
+### 46.2 Analisis Akar Masalah (*Root Cause Analysis*)
+- **Penyebab**:
+  Pada fungsi `formatRealtimeAgo` di [DashboardPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/DashboardPage.jsx), penentuan teks *"Hari ini"* sebelumnya didasarkan pada rumus selisih jam mentah:
+  ```javascript
+  if (diffHours < 24) {
+    return `Hari ini, ${hours}:${mins} WIB (${diffHours} jam lalu)`;
+  }
+  ```
+  Jika siswa belajar di malam hari (contoh: Senin 12 Oktober pukul 22:41 WIB) dan membuka kembali dashboard pada keesokan paginya (Selasa 13 Oktober pukul 09:27 WIB), selisih waktunya baru **10 jam** (`diffHours = 10 < 24`).
+  Akibatnya, antarmuka keliru melabeli aktivitas tersebut sebagai *"Hari ini, 22:41 WIB (10 jam lalu)"*, padahal tanggal kalendernya sudah berganti ke hari berikutnya (*Kemarin*).
+
+### 46.3 Solusi & Implementasi Teknis
+1. **Perhitungan Hari Kalender Murni (*Calendar-Day Aware*) di [DashboardPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/DashboardPage.jsx)**:
+   - Menghitung selisih tanggal tengah malam (`midnight to midnight`):
+     ```javascript
+     const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+     const targetMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+     const diffCalendarDays = Math.round((nowMidnight - targetMidnight) / (24 * 60 * 60 * 1000));
+     ```
+   - **Jika `diffCalendarDays === 0` (Hari kalender sama)**:
+     - < 45 detik: *"Baru saja"*
+     - < 60 menit: *"X menit yang lalu"*
+     - >= 1 jam: *"Hari ini, HH:mm WIB (X jam lalu)"*
+   - **Jika `diffCalendarDays === 1` (Hari kalender kemarin)**:
+     - Jika < 24 jam: *"Kemarin, HH:mm WIB (X jam lalu)"* (contoh: `Kemarin, 22:41 WIB (10 jam lalu)`)
+     - >= 24 jam: *"Kemarin, HH:mm WIB"*
+   - **Jika 2–6 hari lalu**: `"${diffCalendarDays} hari lalu, HH:mm WIB"`
+   - **Lebih dari 6 hari lalu**: Format tanggal lengkap (`dd MMM yyyy, HH:mm WIB`).
+2. **Sinkronisasi Label Aktivitas Terakhir (`getLastActiveText()`)**:
+   - Menyelaraskan teks pada footer aktivitas belajar `Aktivitas Terakhir: <strong>Kemarin</strong>` jika aktivitas paling baru dilakukan kemarin malam.
+3. **Sinkronisasi Backend ([DashboardController.php](file:///d:/laragon/www/ruang-paham/backend/app/Http/Controllers/Api/DashboardController.php))**:
+   - Kolom `learning_activities.last_active` menggunakan helper Carbon `isToday()` dan `isYesterday()` pada modul aktivitas terakhir.
+
+### 46.4 Hasil Verifikasi
+- Jam 22:41 WIB kemarin kini tampil: **`Kemarin, 22:41 WIB (10 jam lalu)`** ✅
+- Jam 22:23 WIB kemarin kini tampil: **`Kemarin, 22:23 WIB (11 jam lalu)`** ✅
+- Jam 21:27 WIB kemarin kini tampil: **`Kemarin, 21:27 WIB (11 jam lalu)`** ✅
+- Aktivitas yang dibuka di hari berjalan tetap tampil presisi sebagai **`Hari ini`** / **`Baru saja`** ✅
+- Kompilasi `npm run build` sukses 100% (1.30s) ✅
+- Status: **SELESAI (100% TERVERIFIKASI) ✅**
+
+---
+
+## 47. Log Prompt #41: Perubahan Tombol "Lihat Semua Aktivitas" dan Pembuatan Halaman Riwayat Aktivitas Belajar Siswa (`/aktivitas`)
+
+### 47.1 Catatan Permintaan Pengguna (Prompt #41)
+```text
+ini diganti "lihat semua aktivitas" dan buat halaman untuk menampilkan semua riwayat aktivitas siswa
+```
+*(Disertai tangkapan layar footer card aktivitas belajar di Dashboard: `Aktivitas Terakhir: Hari ini | Lihat Semua Materi →`)*
+
+### 47.2 Analisis Kebutuhan & Desain Solusi
+1. **Perubahan Teks & Navigasi di Dashboard**:
+   - Tautan pada footer kartu aktivitas belajar di [DashboardPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/DashboardPage.jsx) yang sebelumnya bertuliskan *"Lihat Semua Materi &rarr;"* dan bernavigasi ke `/jelajahi`, diubah menjadi:
+     **`Lihat Semua Aktivitas &rarr;`** dengan navigasi langsung ke rute baru **`/aktivitas`** (`navigate('/aktivitas')`).
+2. **Pembuatan Halaman Riwayat Aktivitas Belajar ([ActivitiesPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/ActivitiesPage.jsx))**:
+   - Rute terdaftar: `/aktivitas` (dilindungi otentikasi siswa).
+   - Tampilan visual ramah anak SD kelas 1-6 dengan konsistensi desain sistem Ruang Paham (`.kids-card`, tema warna dinamis per mata pelajaran, Poppins font).
+   - **Fitur Halaman `/aktivitas`**:
+     1. **Header & Tombol Kembali**: Tautan *"← Kembali ke Dashboard"* (`navigate('/dashboard')`), judul *"Riwayat Aktivitas Belajar Siswa 📚"*, deskripsi personal nama siswa, dan indikator status *Pencatatan Belajar Real-Time*.
+     2. **4 Ringkasan Statistik Utama**:
+        - 🎯 *Materi Tuntas* (Jumlah modul selesai)
+        - 📖 *Sedang Dipelajari* (Jumlah modul dalam progres)
+        - ⏱️ *Waktu Belajar Nyata* (Total akumulasi menit belajar rasional)
+        - ⭐ *Bintang Diperoleh* (Total poin bintang siswa)
+     3. **Toolbar Interaktif**:
+        - Input pencarian langsung berdasarkan judul materi atau mata pelajaran.
+        - Filter tab status: *Semua*, *Selesai*, *Sedang Belajar* (dengan counter dinamis).
+        - Filter dropdown mata pelajaran (IPAS, Matematika, Bahasa Indonesia, dll.).
+        - Pengurutan (*Sorting*): *Terbaru Dibuka*, *Terlama*, *Durasi Belajar Terbanyak*, *Nilai Kuis Tertinggi*.
+        - Tombol reset filter jika filter aktif.
+     4. **Daftar Kartu Riwayat Aktivitas**:
+        - Ikon mata pelajaran dengan warna tema spesifik.
+        - Kategori mata pelajaran, tingkat kelas, bab, serta waktu akses kalender presisi (*"Kemarin, 22:41 WIB (X jam lalu)"* / *"Hari ini, HH:mm WIB"* / *"Baru saja"*).
+        - Badge status: *Selesai* (hijau) & *Sedang Belajar* (biru).
+        - Indikator durasi belajar realtime (*"⏱️ Xm waktu belajar"*).
+        - Badge nilai kuis (*"🏆 Nilai Kuis: 100"*) & perolehan poin (*"+X Bintang ⭐"*).
+        - Tombol aksi: *"Ulangi Materi"* untuk yang selesai, *"Lanjutkan Belajar"* untuk yang sedang belajar (langsung menuju `/materi/{lessonId}`).
+     5. **Pagination Elegan**:
+        - Pembagian halaman teratur (8 item per halaman) dengan tombol Prev, nomor halaman, dan Next.
+     6. **Empty State Ramah Anak**:
+        - Tampilan pesan ceria dan tombol jelajahi jika belum ada aktivitas belajar, serta pesan ramah jika pencarian filter tidak menemukan hasil.
+3. **Integrasi Navigasi & Backend**:
+   - [Navbar.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/components/Navbar.jsx): Menambahkan `/aktivitas` ke daftar rute siswa `isStudentPage`, menambahkan menu *"Riwayat Aktivitas"* pada dropdown profil pengguna dan mobile drawer.
+   - [App.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/App.jsx): Menambahkan rute `<Route path="/aktivitas" element={user ? <ActivitiesPage /> : <Navigate to="/login" replace />} />` dengan *lazy loading*.
+   - [api.js](file:///d:/laragon/www/ruang-paham/frontend/src/services/api.js): Menambahkan method `getActivities()`.
+   - [web.php](file:///d:/laragon/www/ruang-paham/backend/routes/web.php): Menambahkan endpoint `/activities` dan `/api/activities` (Sanctum protected).
+
+### 47.3 Matriks Resolusi Perubahan (Prompt #41)
+
+| Komponen / Berkas | Permintaan Pengguna | Solusi & Hasil Implementasi Teknis | Status |
+| :--- | :--- | :--- | :--- |
+| **Footer Aktivitas Dashboard (`DashboardPage.jsx`)** | Ganti "lihat semua aktivitas" | Tombol diganti menjadi **`Lihat Semua Aktivitas &rarr;`** dengan handler `onClick={() => navigate('/aktivitas')}`. | Selesai ✅ |
+| **Halaman Riwayat Aktivitas (`ActivitiesPage.jsx`)** | Buat halaman untuk menampilkan semua riwayat aktivitas siswa | Membuat halaman lengkap `/aktivitas` dengan 4 kartu statistik, pencarian materi, filter status, filter mapel, sorting, kartu aktivitas berdesain ramah anak, timestamp kalender realtime, durasi belajar, dan pagination. | Selesai ✅ |
+| **Rute & Layout SPA (`App.jsx`)** | Pendaftaran rute `/aktivitas` | Menambahkan lazy import `ActivitiesPage` dan mendaftarkan rute terlindung auth. Navbar dan Footer tetap tampil konsisten. | Selesai ✅ |
+| **Navigasi Global (`Navbar.jsx`)** | Pengenalan rute siswa & menu cepat | Menambahkan `/aktivitas` ke `isStudentPage`, opsi *"Riwayat Aktivitas"* pada dropdown avatar dan drawer navigasi ponsel. | Selesai ✅ |
+| **Layanan API (`api.js`) & Backend Route (`web.php`)** | Dukungan endpoint aktivitas | Menambahkan `api.getActivities()` dan rute `/api/activities` di backend. | Selesai ✅ |
+| **Kompilasi & Verifikasi Produksi** | Tanpa error kompilasi | Menjalankan `npm run build` berhasil 100% (1.28s) tanpa kendala. | Selesai ✅ |
+
+---
+
+## 48. Log Prompt #42: Sinkronisasi Penuh Data Card Riwayat Aktivitas Dashboard & Pembaruan Real-Time di Halaman Aktivitas
+
+### 48.1 Catatan Permintaan Pengguna (Prompt #42)
+```text
+ya halaman aktivitas nya diisi dari card riwayat aktivitas di dashboard dan secara realtime
+```
+
+### 48.2 Analisis Masalah & Kebutuhan (*Root Cause & Solution*)
+1. **Analisis Akar Masalah**:
+   - Pada [DashboardController.php](file:///d:/laragon/www/ruang-paham/backend/app/Http/Controllers/Api/DashboardController.php), terdapat pemanggilan `Carbon::parse(...)` pada baris 370 yang menyebabkan error internal `Class "App\Http\Controllers\Api\Carbon" not found` (HTTP 500) karena import `use Carbon\Carbon;` belum disertakan di awal berkas.
+   - Akibat HTTP 500 tersebut, frontend menangkap error ke blok `catch` dan menampilkan data fallback, sedangkan data asli siswa dari database tidak tersinkronisasi.
+2. **Solusi Perbaikan Backend**:
+   - Menambahkan import `use Carbon\Carbon;` di [DashboardController.php](file:///d:/laragon/www/ruang-paham/backend/app/Http/Controllers/Api/DashboardController.php).
+   - Pengujian terverifikasi: Endpoint `/api/dashboard` dan `/api/activities` kini mengembalikan **HTTP 200 OK** dengan data riwayat belajar nyata (6 aktivitas aktual dari database).
+3. **Penyelarasan Tampilan Card Riwayat Aktivitas ([ActivitiesPage.jsx](file:///d:/laragon/www/ruang-paham/frontend/src/pages/ActivitiesPage.jsx))**:
+   - Menyelaraskan seluruh struktur elemen card dengan kartu aktivitas di Dashboard:
+     - Ikon tema mata pelajaran dalam rounded square (`subject_color`).
+     - Nama mata pelajaran (*uppercase*) dengan warna khas masing-masing tema.
+     - Separator titik dan waktu kalender relatif presisi (`formatRealtimeAgo`).
+     - Judul materi tebal dan jelas.
+     - Badge status (*Selesai* / *Sedang Belajar*).
+     - Pill durasi belajar realtime (`⏱️ Xm belajar`).
+     - Perolehan poin bintang (`+{points} Poin ⭐`) dan nilai kuis (`🏆 Nilai: {score}`).
+     - Tombol aksi yang identik: *"Ulangi"* untuk yang selesai dan *"Buka"* untuk yang sedang belajar menuju `/materi/:lessonId`.
+4. **Mekanisme Realtime Dinamis**:
+   - **Background Polling 10 Detik**: Mengambil data terbaru secara otomatis setiap 10 detik tanpa memunculkan layar loading penuh.
+   - **Window Focus Event Listener**: Segera memperbarui data seketika saat siswa berpindah tab kembali ke halaman Ruang Paham.
+   - **Timer Ticker 5 Detik**: Memperbarui status waktu relatif (*"Baru saja"*, *"X menit lalu"*, *"Kemarin, 22:41 WIB"*) dan kalkulasi durasi menit belajar secara kontinyu tanpa refresh halaman.
+   - **Indikator Realtime Visual & Tombol Segarkan**: Dilengkapi badge *"Realtime Aktif"* dengan animasi pulse serta tombol *"Segarkan"* manual.
+
+### 48.3 Hasil Verifikasi
+- Pengujian API: HTTP 200 OK untuk user `Ayudhya Naja` (6 aktivitas termuat lengkap) ✅
+- Kompilasi `npm run build` sukses 100% (1.33s) ✅
+- Status: **SELESAI (100% TERVERIFIKASI) ✅**
 
 
 

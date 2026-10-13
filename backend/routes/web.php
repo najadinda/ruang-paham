@@ -60,6 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard/data', [DashboardController::class, 'index']);
     Route::get('/api/dashboard', [DashboardController::class, 'index']);
+    Route::get('/activities', [DashboardController::class, 'index']);
+    Route::get('/api/activities', [DashboardController::class, 'index']);
 
     Route::post('/lessons/{id}/quiz/submit', [QuizController::class, 'submitQuiz']);
     Route::post('/api/lessons/{id}/quiz/submit', [QuizController::class, 'submitQuiz']);

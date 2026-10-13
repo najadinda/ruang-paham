@@ -15,6 +15,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ de
 const ExplorePage = lazy(() => import('./pages/ExplorePage').then(m => ({ default: m.ExplorePage })));
 const LessonDetailPage = lazy(() => import('./pages/LessonDetailPage').then(m => ({ default: m.LessonDetailPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const ActivitiesPage = lazy(() => import('./pages/ActivitiesPage').then(m => ({ default: m.ActivitiesPage })));
 
 // Helper component untuk auto-scroll ke anchor link (misal: /#keunggulan)
 function ScrollToAnchor() {
@@ -41,15 +42,18 @@ function MainLayout() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Halaman Login dan Register tidak menggunakan Navbar dan Footer
+  // Halaman Login, Register, Materi/Kuis, dan Profil tidak menggunakan Navbar dan Footer
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isLessonPage = location.pathname.startsWith('/materi');
+  const isProfilePage = location.pathname.startsWith('/profil');
+  const hideNavbarAndFooter = isAuthPage || isLessonPage || isProfilePage;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <ScrollToAnchor />
 
-      {/* Navbar tidak ditampilkan di halaman login dan register */}
-      {!isAuthPage && <Navbar />}
+      {/* Navbar tidak ditampilkan di halaman login, register, serta materi & kuis */}
+      {!hideNavbarAndFooter && <Navbar />}
 
       <main style={{ flex: 1, display: isAuthPage ? 'flex' : 'block', flexDirection: 'column' }}>
         <Suspense fallback={<LoadingScreen inline={false} text="Memuat halaman..." size={48} padding="120px 20px" />}>
@@ -78,6 +82,10 @@ function MainLayout() {
               path="/profil"
               element={user ? <ProfilePage /> : <Navigate to="/login" replace />}
             />
+            <Route
+              path="/aktivitas"
+              element={user ? <ActivitiesPage /> : <Navigate to="/login" replace />}
+            />
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -85,8 +93,8 @@ function MainLayout() {
         </Suspense>
       </main>
 
-      {/* Footer tidak ditampilkan di halaman login dan register */}
-      {!isAuthPage && <Footer />}
+      {/* Footer tidak ditampilkan di halaman login, register, serta materi & kuis */}
+      {!hideNavbarAndFooter && <Footer />}
     </div>
   );
 }

@@ -9,6 +9,35 @@ function getAuthHeaders() {
   };
 }
 
+/**
+ * Helper untuk parsing response HTTP secara aman:
+ * Mencegah error "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+ * saat server mengembalikan body kosong, proxy timeout (502/504), atau halaman HTML error.
+ */
+async function parseResponse(res, defaultErrorMsg = 'Terjadi kendala pada server. Silakan coba lagi.') {
+  let json = null;
+  let text = '';
+  try {
+    text = await res.text();
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+
+  if (!res.ok) {
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      throw new Error('Server backend sedang bersiap atau belum aktif (port 8000). Silakan tunggu sebentar dan coba lagi.');
+    }
+    const errMsg = json?.errors
+      ? Object.values(json.errors).flat().join(' ')
+      : (json?.message || defaultErrorMsg);
+    throw new Error(errMsg);
+  }
+
+  // Jika response status OK (200-299) tetapi body kosong, kembalikan objek kosong
+  return json !== null ? json : {};
+}
+
 export const api = {
   // Auth
   async register(data) {
@@ -17,12 +46,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data)
     });
-    const json = await res.json();
-    if (!res.ok) {
-      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Pendaftaran gagal');
-      throw new Error(errMsg);
-    }
-    return json;
+    return parseResponse(res, 'Pendaftaran gagal');
   },
 
   async login(data) {
@@ -31,12 +55,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data)
     });
-    const json = await res.json();
-    if (!res.ok) {
-      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Login gagal');
-      throw new Error(errMsg);
-    }
-    return json;
+    return parseResponse(res, 'Nama/Email atau password salah.');
   },
 
   async forgotPassword(email) {
@@ -45,12 +64,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ email })
     });
-    const json = await res.json();
-    if (!res.ok) {
-      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Gagal memproses lupa kata sandi');
-      throw new Error(errMsg);
-    }
-    return json;
+    return parseResponse(res, 'Gagal memproses lupa kata sandi');
   },
 
   async resetPassword(data) {
@@ -59,12 +73,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data)
     });
-    const json = await res.json();
-    if (!res.ok) {
-      const errMsg = json.errors ? Object.values(json.errors).flat().join(' ') : (json.message || 'Gagal memperbarui kata sandi');
-      throw new Error(errMsg);
-    }
-    return json;
+    return parseResponse(res, 'Gagal memperbarui kata sandi');
   },
 
   async logout() {
@@ -83,9 +92,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/profile`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat profil');
-    return json;
+    return parseResponse(res, 'Gagal memuat profil');
   },
 
   async updateProfile(data) {
@@ -94,9 +101,7 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify(data)
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memperbarui profil');
-    return json;
+    return parseResponse(res, 'Gagal memperbarui profil');
   },
 
   // Dashboard
@@ -104,9 +109,15 @@ export const api = {
     const res = await fetch(`${API_BASE}/dashboard`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat dashboard');
-    return json;
+    return parseResponse(res, 'Gagal memuat dashboard');
+  },
+
+  // Learning Activities
+  async getActivities() {
+    const res = await fetch(`${API_BASE}/activities`, {
+      headers: getAuthHeaders()
+    });
+    return parseResponse(res, 'Gagal memuat riwayat aktivitas');
   },
 
   // Subjects & Lessons
@@ -115,9 +126,7 @@ export const api = {
     const res = await fetch(`${API_BASE}/subjects${query}`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat mata pelajaran');
-    return json;
+    return parseResponse(res, 'Gagal memuat mata pelajaran');
   },
 
   async getSubject(id, grade = null) {
@@ -125,27 +134,21 @@ export const api = {
     const res = await fetch(`${API_BASE}/subjects/${id}${query}`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat mata pelajaran');
-    return json;
+    return parseResponse(res, 'Gagal memuat mata pelajaran');
   },
 
   async getLesson(id) {
     const res = await fetch(`${API_BASE}/lessons/${id}`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat materi');
-    return json;
+    return parseResponse(res, 'Gagal memuat materi');
   },
 
   async getQuiz(lessonId) {
     const res = await fetch(`${API_BASE}/lessons/${lessonId}/quiz`, {
       headers: getAuthHeaders()
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal memuat kuis');
-    return json;
+    return parseResponse(res, 'Gagal memuat kuis');
   },
 
   async submitQuiz(lessonId, answers) {
@@ -154,8 +157,7 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ answers })
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Gagal mengirim jawaban');
-    return json;
+    return parseResponse(res, 'Gagal mengirim jawaban');
   }
 };
+

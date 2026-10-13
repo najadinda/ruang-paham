@@ -82,33 +82,51 @@ export function DashboardPage() {
     }).format(today);
   };
 
-  // Format waktu realtime ramah anak (contoh: "Baru saja", "5 menit yang lalu", "Hari ini, 13:03 WIB")
+  // Format waktu realtime ramah anak (membedakan hari kalender: "Baru saja", "5 menit yang lalu", "Hari ini, 13:03 WIB", "Kemarin, 22:41 WIB")
   const formatRealtimeAgo = (dateStr) => {
     if (!dateStr) return 'Hari ini';
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
 
-    const diffSeconds = Math.max(0, Math.floor((nowTime - date.getTime()) / 1000));
+    const now = new Date(nowTime);
 
-    if (diffSeconds < 45) {
-      return 'Baru saja';
-    }
+    // Hitung selisih hari kalender murni (midnight to midnight)
+    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const diffCalendarDays = Math.round((nowMidnight - targetMidnight) / (24 * 60 * 60 * 1000));
+
+    const diffSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000));
     const diffMinutes = Math.floor(diffSeconds / 60);
-    if (diffMinutes < 60) {
-      return `${diffMinutes} menit yang lalu`;
-    }
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) {
-      const hours = String(date.getHours()).padStart(2, '0');
-      const mins = String(date.getMinutes()).padStart(2, '0');
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const mins = String(date.getMinutes()).padStart(2, '0');
+
+    // 1. Jika di hari kalender yang sama (Hari ini)
+    if (diffCalendarDays === 0) {
+      if (diffSeconds < 45) {
+        return 'Baru saja';
+      }
+      if (diffMinutes < 60) {
+        return `${diffMinutes} menit yang lalu`;
+      }
       return `Hari ini, ${hours}:${mins} WIB (${diffHours} jam lalu)`;
     }
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays === 1) {
-      const hours = String(date.getHours()).padStart(2, '0');
-      const mins = String(date.getMinutes()).padStart(2, '0');
+
+    // 2. Jika di hari kalender kemarin (Kemarin)
+    if (diffCalendarDays === 1) {
+      if (diffHours < 24) {
+        return `Kemarin, ${hours}:${mins} WIB (${diffHours} jam lalu)`;
+      }
       return `Kemarin, ${hours}:${mins} WIB`;
     }
+
+    // 3. Jika 2 - 6 hari lalu
+    if (diffCalendarDays > 1 && diffCalendarDays <= 6) {
+      return `${diffCalendarDays} hari lalu, ${hours}:${mins} WIB`;
+    }
+
+    // 4. Lebih dari 6 hari lalu
     return new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
       month: 'short',
@@ -116,6 +134,25 @@ export function DashboardPage() {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date) + ' WIB';
+  };
+
+  // Label aktivitas terakhir (Hari ini, Kemarin, atau tanggal)
+  const getLastActiveText = () => {
+    if (!activityItems || activityItems.length === 0) return '-';
+    const firstItem = activityItems[0];
+    const dateStr = firstItem.raw_updated_at || firstItem.updated_at;
+    if (!dateStr) return learning_activities?.last_active || 'Hari ini';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return learning_activities?.last_active || 'Hari ini';
+
+    const now = new Date(nowTime);
+    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const targetMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const diffCalendarDays = Math.round((nowMidnight - targetMidnight) / (24 * 60 * 60 * 1000));
+
+    if (diffCalendarDays === 0) return 'Hari ini';
+    if (diffCalendarDays === 1) return 'Kemarin';
+    return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
   };
 
   // Sapaan otomatis sesuai waktu jam saat ini
@@ -1259,9 +1296,9 @@ export function DashboardPage() {
                 fontSize: '0.82rem',
                 color: 'var(--text-muted)'
               }}>
-                <span>Aktivitas Terakhir: <strong>{activityItems.length > 0 ? (learning_activities?.last_active || 'Hari ini') : '-'}</strong></span>
+                <span>Aktivitas Terakhir: <strong>{getLastActiveText()}</strong></span>
                 <button
-                  onClick={() => navigate('/jelajahi')}
+                  onClick={() => navigate('/aktivitas')}
                   style={{
                     background: 'none',
                     border: 'none',
@@ -1271,7 +1308,7 @@ export function DashboardPage() {
                     fontSize: '0.82rem'
                   }}
                 >
-                  Lihat Semua Materi &rarr;
+                  Lihat Semua Aktivitas &rarr;
                 </button>
               </div>
             </div>

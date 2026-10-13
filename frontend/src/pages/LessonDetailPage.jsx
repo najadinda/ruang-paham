@@ -223,15 +223,18 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
             transition={{ duration: 0.4 }}
           >
             {/* Header Materi */}
-            <div style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: 'var(--radius-xl)',
-              padding: '30px',
-              border: '2px solid var(--border-blue)',
-              boxShadow: 'var(--shadow-card)',
-              marginBottom: '30px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+            <div
+              className="lesson-header-card"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 'var(--radius-xl)',
+                padding: '30px',
+                border: '2px solid var(--border-blue)',
+                boxShadow: 'var(--shadow-card)',
+                marginBottom: '30px'
+              }}
+            >
+              <div className="lesson-category-badges">
                 <span className="badge badge-blue">
                   {lesson.subject?.name || 'Mata Pelajaran'}
                 </span>
@@ -347,23 +350,18 @@ export function LessonDetailPage({ lessonId: propLessonId, onBack, onComplete })
                   <motion.div
                     key={idx}
                     whileHover={{ scale: 1.01 }}
-                    className="kids-card"
+                    className="kids-card lesson-chunk-card"
                     style={{
                       borderLeft: '8px solid var(--primary-blue)',
                       padding: '24px 28px'
                     }}
                   >
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      marginBottom: '10px'
-                    }}>
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-blue)', margin: 0 }}>
+                    <div className="lesson-chunk-header">
+                      <h3 className="lesson-chunk-title">
                         {idx + 1}. {chunk.title}
                       </h3>
                       {chunk.highlight && (
-                        <span className="badge badge-blue">
+                        <span className="badge badge-blue lesson-topic-badge">
                           ✨ {chunk.highlight}
                         </span>
                       )}

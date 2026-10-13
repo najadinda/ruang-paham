@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -10,13 +11,15 @@ import {
   Check, 
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AVATAR_OPTIONS, AvatarDisplay } from '../utils/avatars';
 import { api } from '../services/api';
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const { user, updateProfile } = useAuth();
   const [stats, setStats] = useState({
     completed_lessons: 1,
@@ -83,9 +86,38 @@ export function ProfilePage() {
     }
   };
 
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <div style={{ padding: '36px 0 80px 0' }}>
       <div className="container">
+        {/* Tombol Panah Kembali (Menyesuaikan halaman yang dibuka sebelumnya) */}
+        <button
+          onClick={handleBack}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--primary-blue)',
+            fontWeight: 700,
+            fontSize: '0.98rem',
+            marginBottom: '16px',
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
+          <ArrowLeft size={20} />
+          <span>Kembali</span>
+        </button>
+
         {/* Header Title */}
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--text-main)', margin: '0 0 4px 0' }}>
@@ -164,11 +196,11 @@ export function ProfilePage() {
                 </p>
               </div>
 
-              {/* Grid 4 Statistik Siswa */}
+              {/* Grid 4 Statistik Siswa (Dibagi menjadi 2 baris: 2 kolom x 2 baris) */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 96px), 1fr))',
-                gap: '10px',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
                 paddingTop: '20px',
                 borderTop: '1px solid #F1F5F9'
               }}>
@@ -279,9 +311,10 @@ export function ProfilePage() {
                   Pilih Avatar Karakter:
                 </label>
 
+                {/* Pilihan Avatar Karakter (Dibagi menjadi 2 baris: 4 kolom x 2 baris) */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 68px), 1fr))',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '10px'
                 }}>
                   {AVATAR_OPTIONS.map((av) => {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lesson;
 use App\Models\Subject;
 use App\Models\UserProgress;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -364,13 +365,24 @@ class DashboardController extends Controller
             $totalStudyMinutes = ($totalCompleted * 10) + ($totalInProgress * 5);
         }
 
+        $latestActivity = $activityList->first();
+        $lastActiveText = 'Hari ini';
+        if ($latestActivity && !empty($latestActivity['raw_updated_at'])) {
+            $dt = Carbon::parse($latestActivity['raw_updated_at'])->setTimezone('Asia/Jakarta');
+            if ($dt->isToday()) {
+                $lastActiveText = 'Hari ini';
+            } elseif ($dt->isYesterday()) {
+                $lastActiveText = 'Kemarin';
+            } else {
+                $lastActiveText = $dt->format('d M Y');
+            }
+        }
+
         $learningActivities = [
             'total_completed' => $totalCompleted,
             'total_in_progress' => $totalInProgress,
             'total_points' => $user->points,
-            'last_active' => $activityList->isNotEmpty()
-                ? ($user->last_login_date ? $user->last_login_date->format('d M Y') : 'Hari ini')
-                : null,
+            'last_active' => $activityList->isNotEmpty() ? $lastActiveText : null,
             'estimated_minutes' => $totalStudyMinutes,
             'total_study_minutes' => $totalStudyMinutes,
             'items' => $activityList,
