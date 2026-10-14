@@ -14,9 +14,9 @@ class QuizSeeder extends Seeder
      */
     public function run(): void
     {
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Quiz::truncate();
-        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $quizzes = [
             // --- Lesson 1 ---

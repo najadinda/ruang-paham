@@ -12,9 +12,9 @@ class LessonSeeder extends Seeder
      */
     public function run(): void
     {
-        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Lesson::truncate();
-        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $lessons = [
             // =========================================================================
