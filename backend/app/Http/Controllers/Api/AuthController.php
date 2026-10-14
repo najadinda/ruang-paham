@@ -201,7 +201,12 @@ class AuthController extends Controller
             'name' => 'sometimes|required|string|max:100',
             'grade' => 'sometimes|required|integer|between:1,6',
             'avatar' => 'sometimes|required|string|in:' . implode(',', $allowedAvatars),
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:8',
+        ], [
+            'name.max' => 'Nama lengkap maksimal 100 karakter.',
+            'grade.between' => 'Kelas harus antara kelas 1 sampai 6.',
+            'avatar.in' => 'Karakter avatar tidak valid.',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
         ]);
 
         if (! empty($validated['name'])) {

@@ -69,7 +69,13 @@ export function LoginPage({ setActivePage }) {
       if (typeof setActivePage === 'function') setActivePage('dashboard');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Nama/Email atau password salah.');
+      let rawMsg = err?.message || 'Nama/Email atau kata sandi tidak cocok.';
+      if (rawMsg.includes('Failed to fetch') || rawMsg.includes('NetworkError') || rawMsg.includes('Failed to execute')) {
+        rawMsg = 'Tidak dapat terhubung ke server. Silakan periksa koneksi atau tunggu server backend aktif, lalu coba lagi beberapa saat.';
+      } else if (rawMsg.includes('Unexpected end of JSON') || rawMsg.includes('JSON')) {
+        rawMsg = 'Server backend belum siap atau merespons tidak sesuai. Silakan coba lagi beberapa saat.';
+      }
+      setError(rawMsg);
     } finally {
       setLoading(false);
     }

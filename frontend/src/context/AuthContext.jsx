@@ -7,17 +7,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('rp_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved || saved === 'undefined' || saved === 'null') return null;
+      return JSON.parse(saved);
     } catch {
+      localStorage.removeItem('rp_user');
       return null;
     }
   });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Jika token tersimpan, sinkronkan profil data aktivitas terbaru dari database
+    // Sinkronkan profil terbaru jika token tersimpan dan valid
     const token = localStorage.getItem('rp_token');
-    if (token) {
+    const isValidToken = token && token !== 'undefined' && token !== 'null' && token.trim() !== '';
+
+    if (isValidToken) {
       api.getProfile()
         .then(res => {
           if (res?.user) {
@@ -26,13 +30,18 @@ export function AuthProvider({ children }) {
           }
         })
         .catch((err) => {
-          // Hanya jika token sudah kedaluwarsa/tidak valid (401), hapus sesi
-          if (err?.message?.includes('Unauthenticated') || err?.message?.includes('unauthenticated')) {
+          const msg = err?.message || '';
+          // Hanya hapus sesi jika token kedaluwarsa atau tidak valid (401)
+          if (msg.includes('Unauthenticated') || msg.includes('unauthenticated') || msg.includes('Sesi telah berakhir')) {
             localStorage.removeItem('rp_token');
             localStorage.removeItem('rp_user');
             setUser(null);
           }
         });
+    } else {
+      localStorage.removeItem('rp_token');
+      localStorage.removeItem('rp_user');
+      setUser(null);
     }
   }, []);
 
@@ -40,6 +49,9 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await api.login(credentials);
+      if (!data || !data.token || !data.user) {
+        throw new Error('Respons masuk tidak valid dari server. Silakan coba beberapa saat lagi.');
+      }
       localStorage.setItem('rp_token', data.token);
       localStorage.setItem('rp_user', JSON.stringify(data.user));
       setUser(data.user);
@@ -53,6 +65,9 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await api.register(formData);
+      if (!data || !data.token || !data.user) {
+        throw new Error('Pendaftaran berhasil, tetapi sesi tidak valid. Silakan masuk secara manual.');
+      }
       localStorage.setItem('rp_token', data.token);
       localStorage.setItem('rp_user', JSON.stringify(data.user));
       setUser(data.user);
@@ -63,14 +78,16 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    setLoading(true);
     try {
       await api.logout();
     } catch {
-      // Ignore network errors on logout
+      // Abaikan kegagalan jaringan saat logout
     } finally {
       localStorage.removeItem('rp_token');
       localStorage.removeItem('rp_user');
       setUser(null);
+      setLoading(false);
     }
   };
 
@@ -78,8 +95,10 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const res = await api.updateProfile(formData);
-      setUser(res.user);
-      localStorage.setItem('rp_user', JSON.stringify(res.user));
+      if (res?.user) {
+        setUser(res.user);
+        localStorage.setItem('rp_user', JSON.stringify(res.user));
+      }
       return res;
     } finally {
       setLoading(false);

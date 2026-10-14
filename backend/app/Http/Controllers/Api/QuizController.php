@@ -80,6 +80,9 @@ class QuizController extends Controller
         $finalScore = $totalQuestions > 0 ? round(($correctCount / $totalQuestions) * 100) : 0;
 
         $user = $request->user();
+        $isFirstCompletion = true;
+        $pointsAwarded = 0;
+
         if ($user) {
             // Update User Progress
             $progress = UserProgress::firstOrNew([
@@ -87,22 +90,34 @@ class QuizController extends Controller
                 'lesson_id' => $lesson->id,
             ]);
 
+            if ($progress->exists && $progress->status === 'selesai') {
+                $isFirstCompletion = false;
+            }
+
             $progress->status = 'selesai';
-            $progress->score = $finalScore;
-            $progress->completed_at = now();
+            // Simpan skor terbaik jika siswa mengulang kuis
+            $progress->score = max($progress->score ?? 0, $finalScore);
+            $progress->completed_at = $progress->completed_at ?? now();
             $progress->save();
 
-            // Reward points
-            $user->points += $totalEarnedPoints;
-            $user->save();
+            // Poin reward hanya diberikan penuh pada penyelesaian materi pertama kali
+            // Mencegah eksploitasi inflasi poin akibat pengulangan materi yang sudah tuntas
+            if ($isFirstCompletion) {
+                $pointsAwarded = $totalEarnedPoints;
+                $user->points += $totalEarnedPoints;
+                $user->save();
+            }
         }
 
         return response()->json([
-            'message' => 'Hebat! Kuis telah selesai diselesaikan! 🌟',
+            'message' => $isFirstCompletion 
+                ? 'Hebat! Kuis telah selesai diselesaikan! 🌟' 
+                : 'Hebat! Kamu berhasil mengulang kuis ini dengan baik! 🌟',
             'score' => $finalScore,
             'correct_count' => $correctCount,
             'total_questions' => $totalQuestions,
-            'points_earned' => $totalEarnedPoints,
+            'points_earned' => $pointsAwarded,
+            'is_first_completion' => $isFirstCompletion,
             'total_user_points' => $user ? $user->points : null,
             'results' => $results,
         ]);

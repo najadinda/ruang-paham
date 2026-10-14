@@ -5,7 +5,29 @@ import net from 'net'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+import fs from 'fs'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function cleanAssetsPlugin() {
+  return {
+    name: 'clean-assets-plugin',
+    buildStart() {
+      const assetsDir = path.resolve(__dirname, '../backend/public/assets');
+      if (fs.existsSync(assetsDir)) {
+        try {
+          const files = fs.readdirSync(assetsDir);
+          for (const file of files) {
+            fs.unlinkSync(path.join(assetsDir, file));
+          }
+          console.log(`\x1b[32m%s\x1b[0m`, `[Ruang Paham] Berhasil membersihkan ${files.length} file aset usang dari backend/public/assets.`);
+        } catch (e) {
+          console.warn('[Ruang Paham] Gagal membersihkan folder assets:', e.message);
+        }
+      }
+    }
+  };
+}
 
 function autoBackendPlugin() {
   return {
@@ -42,7 +64,7 @@ function autoBackendPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), autoBackendPlugin()],
+  plugins: [react(), autoBackendPlugin(), cleanAssetsPlugin()],
   server: {
     port: 5173,
     proxy: {
@@ -52,11 +74,32 @@ export default defineConfig({
         secure: false,
         configure: (proxy) => {
           proxy.on('error', (err, req, res) => {
-            console.warn('[Vite Proxy] Menghubungi backend 127.0.0.1:8000...', err.message);
+            console.warn('[Vite Proxy] Backend 127.0.0.1:8000 belum siap:', err.message);
+            // Coba trigger auto-start jika belum jalan
+            const socket = new net.Socket();
+            socket.setTimeout(400);
+            socket.on('error', () => {
+              socket.destroy();
+              try {
+                const backendDir = path.resolve(__dirname, '../backend');
+                const child = spawn('php', ['artisan', 'serve', '--host=127.0.0.1', '--port=8000'], {
+                  cwd: backendDir,
+                  stdio: 'ignore',
+                  detached: true
+                });
+                child.unref();
+              } catch (_) {}
+            });
+            socket.on('connect', () => socket.destroy());
+            socket.connect(8000, '127.0.0.1');
+
             if (res && !res.headersSent && typeof res.writeHead === 'function') {
-              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.writeHead(503, { 
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate'
+              });
               res.end(JSON.stringify({
-                message: 'Server backend sedang memulai (port 8000). Silakan coba 2 detik lagi.',
+                message: 'Server backend sedang bersiap atau belum aktif (port 8000). Silakan tunggu sebentar dan coba lagi.',
                 errors: { server: ['Backend port 8000 sedang bersiap.'] }
               }));
             }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -38,6 +38,9 @@ export function ActivitiesPage() {
   const [nowTime, setNowTime] = useState(Date.now());
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
+  const isMountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'selesai', 'sedang_belajar'
@@ -48,10 +51,16 @@ export function ActivitiesPage() {
 
   // 1. Timer Realtime Ticker setiap 5 detik untuk memperbarui keterangan waktu secara dinamis
   useEffect(() => {
+    isMountedRef.current = true;
     const timer = setInterval(() => {
-      setNowTime(Date.now());
+      if (isMountedRef.current) {
+        setNowTime(Date.now());
+      }
     }, 5000);
-    return () => clearInterval(timer);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(timer);
+    };
   }, []);
 
   // 2. Sinkronisasi data aktivitas secara Realtime (Polling setiap 10 detik & saat tab kembali aktif)
@@ -74,6 +83,8 @@ export function ActivitiesPage() {
   }, []);
 
   const loadActivities = async (isBackground = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       if (!isBackground) {
         setLoading(true);
@@ -83,6 +94,7 @@ export function ActivitiesPage() {
 
       // Ambil data aktivitas langsung dari API Dashboard/Activities yang terverifikasi
       const res = await api.getActivities();
+      if (!isMountedRef.current) return;
       setActivitiesData(res);
       setLastSyncTime(new Date());
 
@@ -92,6 +104,7 @@ export function ActivitiesPage() {
         localStorage.setItem('rp_user', JSON.stringify({ ...(user || {}), ...res.student }));
       }
     } catch (err) {
+      if (!isMountedRef.current) return;
       console.error('Gagal memuat riwayat aktivitas secara realtime:', err);
 
       // Fallback data teruji jika server offline/terkendala koneksi (identik dengan fallback di dashboard)
@@ -168,8 +181,11 @@ export function ActivitiesPage() {
         });
       }
     } finally {
-      if (!isBackground) setLoading(false);
-      setIsRefreshing(false);
+      isFetchingRef.current = false;
+      if (isMountedRef.current) {
+        if (!isBackground) setLoading(false);
+        setIsRefreshing(false);
+      }
     }
   };
 

@@ -14,8 +14,7 @@ import {
   Languages, 
   Palette, 
   HeartPulse, 
-  Sparkles,
-  LogIn
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -185,7 +184,7 @@ export function LandingPage({ setActivePage }) {
               Ruang belajar digital yang dirancang khusus untuk siswa SD Kelas 1 hingga 6. Dilengkapi materi ringkas, video edukasi, kuis interaktif, dan karakter robot & satwa sahabatmu!
             </p>
 
-            {/* CTA Buttons: Mulai Petualangan Belajarmu & Masuk ke Akun */}
+            {/* CTA Button: Mulai Petualangan Belajarmu */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: '32px' }}>
               <motion.button
                 whileHover={{ scale: 1.03, y: -2 }}
@@ -195,16 +194,6 @@ export function LandingPage({ setActivePage }) {
               >
                 <Rocket size={20} />
                 <span>Mulai Petualangan Belajarmu</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => navigate('/login')}
-                className="btn btn-outline btn-lg"
-              >
-                <LogIn size={20} />
-                <span>Masuk ke Akun</span>
               </motion.button>
             </div>
 
@@ -500,18 +489,6 @@ export function LandingPage({ setActivePage }) {
                 </div>
               </div>
             ))}
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '36px' }}>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => navigate(user ? '/jelajahi' : '/register')}
-              className="btn btn-outline"
-              style={{ padding: '12px 28px', fontSize: '0.98rem', fontWeight: 600 }}
-            >
-              <span>{user ? 'Buka Halaman Siswa & Akses Materi' : 'Daftar Sekarang untuk Akses Materi Pembelajaran'} &rarr;</span>
-            </motion.button>
           </div>
         </div>
       </section>

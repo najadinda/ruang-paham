@@ -71,10 +71,19 @@ Route::middleware('auth:sanctum')->group(function () {
 // 4. FRONTEND SPA CATCH-ALL ROUTE
 // Menjalankan frontend React langsung dari Laravel
 // ==========================================
-Route::get('/{any?}', function () {
+Route::fallback(function () {
+    if (request()->is('api/*')) {
+        return response()->json([
+            'message' => 'Endpoint API tidak ditemukan.',
+        ], 404);
+    }
     $indexPath = public_path('index.html');
     if (file_exists($indexPath)) {
-        return response()->file($indexPath);
+        return response()->file($indexPath, [
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
     return view('welcome');
-})->where('any', '^(?!api|up|sanctum).*$');
+});
