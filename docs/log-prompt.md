@@ -2089,3 +2089,88 @@ PERATURAN UTAMA — TIDAK BOLEH ADA PERUBAHAN
 - **Status Akhir Proyek**: **READY (100% Siap Demonstrasi & Pengujian)**.
 - **Kondisi Repository**: Bersih, stabil, seluruh 8 mata pelajaran, 67 modul materi, 670 kuis, dan akun siswa riil utuh serta terverifikasi.
 
+---
+
+## 53. Log Prompt #48: Perbaikan Otomatis Materi RuangPaham Kosong Setelah Deployment (peserta10.m1sec.my.id)
+
+### 53.1 Catatan Permintaan Pengguna (Prompt #48)
+```text
+URGENT — PERBAIKI MATERI RUANGPAHAM YANG KOSONG SETELAH DEPLOYMENT
+Repository: https://github.com/najadinda/ruang-paham
+Website production: https://peserta10.m1sec.my.id
+Deadline lomba besok. Prioritaskan solusi tercepat, aman, dan minimal.
+MASALAH:
+Website sudah berhasil di-deploy.
+Login dan halaman Jelajahi dapat dibuka.
+Seluruh mata pelajaran Kelas 1–6 dan Semua Kelas kosong.
+GET /api/subjects?grade=3 menghasilkan HTTP 200: {"grade_filter":3,"subjects":[]}
+Hosting tidak menyediakan terminal/console yang dapat diakses.
+```
+
+### 53.2 Investigasi & Akar Penyebab (Root Cause Analysis)
+1. **Query API Bukan Penyebab**:
+   - `SubjectController::index` menggunakan `Subject::query()->withCount(...)`. Metode `withCount` melakukan `LEFT JOIN` / subquery count, sehingga seluruh record dari tabel `subjects` tetap diambil meskipun pelajaran kelas tertentu belum ada.
+   - Hasil `subjects: []` murni karena tabel `subjects` di database production benar-benar memiliki 0 record.
+
+2. **Error Sintaks MySQL pada Lingkungan SQLite Docker**:
+   - Pada `SubjectSeeder.php`, `LessonSeeder.php`, dan `QuizSeeder.php`, terdapat baris mentah MySQL:
+     ```php
+     \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+     Model::truncate();
+     \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+     ```
+   - Lingkungan Docker SQLite gagal mengeksekusi sintaks `SET FOREIGN_KEY_CHECKS` (`SQLSTATE[HY000]: General error: 1 near "SET": syntax error`), sehingga seeder terhenti sebelum data sempat dimasukkan.
+   - Selain itu, penggunaan `truncate()` berisiko menghapus data riwayat pengguna jika foreign key cascading aktif.
+
+3. **Masking Error pada `dockerfile`**:
+   - Baris build Docker sebelumnya menggunakan:
+     ```dockerfile
+     (php artisan db:seed --force || true)
+     ```
+   - Akibat operator `|| true`, kegagalan seeder diabaikan saat image dibangun, menghasilkan container dengan database kosong.
+
+4. **Keterbatasan Hosting Tanpa Terminal / Console**:
+   - Hosting tidak menyediakan akses CLI/SSH bagi pengguna untuk mengeksekusi `php artisan db:seed` secara manual.
+   - Jika hosting menggunakan volume persisten yang telah terpasang ke database kosong lama, build-time seed pada image dapat tertimpa oleh volume kosong tersebut.
+
+### 53.3 Solusi Teknis Teraman & Minimal yang Diterapkan
+1. **Pembaruan Seeder Menjadi Non-Destruktif & Cross-Database**:
+   - [SubjectSeeder.php](file:///d:/laragon/www/ruang-paham/backend/database/seeders/SubjectSeeder.php): Menghapus `truncate()` dan `SET FOREIGN_KEY_CHECKS`. Menggunakan `Subject::updateOrCreate(['id' => $subject['id']], $subject);`.
+   - [LessonSeeder.php](file:///d:/laragon/www/ruang-paham/backend/database/seeders/LessonSeeder.php): Menghapus `truncate()` dan `SET FOREIGN_KEY_CHECKS`. Menggunakan `Lesson::updateOrCreate(['id' => $lesson['id']], $lesson);`.
+   - [QuizSeeder.php](file:///d:/laragon/www/ruang-paham/backend/database/seeders/QuizSeeder.php): Menghapus `truncate()` dan `SET FOREIGN_KEY_CHECKS`. Menggunakan seleksi id pelajaran yang sudah ada (`Quiz::select('lesson_id')->distinct()`) dan memasukkan data soal baru secara chunk (50 baris per batch) tanpa menduplikasi data atau merusak riwayat quiz siswa.
+
+2. **Mekanisme Otomatis Auto-Seed Aman pada Startup (Zero-Terminal Deployment)**:
+   - [AppServiceProvider.php](file:///d:/laragon/www/ruang-paham/backend/app/Providers/AppServiceProvider.php): Menambahkan pengamanan di metode `boot()`:
+     ```php
+     static $checked = false;
+     if (!$checked) {
+         $checked = true;
+         try {
+             if (\Illuminate\Support\Facades\Schema::hasTable('subjects')) {
+                 if (\App\Models\Subject::count() === 0) {
+                     \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+                 }
+             }
+         } catch (\Throwable $e) {
+             \Illuminate\Support\Facades\Log::warning('Safe auto-seed skipped: ' . $e->getMessage());
+         }
+     }
+     ```
+   - **Karakteristik Keamanan**:
+     - **TIDAK** membuka endpoint publik.
+     - **TIDAK** berjalan di setiap request berulang (dibatasi static `$checked` dan kondisi `Subject::count() === 0`).
+     - **TIDAK** menghapus atau mengubah data siswa (`users`), skor, atau riwayat progress (`user_progress`).
+     - Otomatis mengisi data materi seketika aplikasi menerima request pertama jika database kosong.
+
+3. **Pembersihan `dockerfile`**:
+   - [dockerfile](file:///d:/laragon/www/ruang-paham/dockerfile): Mengganti `(php artisan db:seed --force || true)` menjadi `php artisan db:seed --force` untuk memastikan image Docker yang di-build selalu membawa database SQLite yang telah terisi penuh.
+
+### 53.4 Hasil Verifikasi Lokal
+- Pengujian eksekusi `php artisan db:seed --force` lokal:
+  - Subjects: 8 (IPAS, Matematika, B. Indonesia, PPKn, B. Inggris, SBdP, PJOK, PAI).
+  - Lessons: 67 modul lengkap seluruh jenjang kelas 1–6.
+  - Quizzes: 670 soal kuis interaktif berbobot 10 poin.
+  - Data akun siswa (`ayudhyanajaaa@gmail.com` / `Ayudhya Naja`) dan progress tetap utuh 100%.
+- Endpoint `GET /api/subjects?grade=3` dan `GET /api/subjects?grade=4` terverifikasi mengembalikan 8 mata pelajaran lengkap dengan `lessons_count` yang sesuai.
+
+

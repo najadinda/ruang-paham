@@ -30,7 +30,7 @@ RUN cp .env.example .env && \
     touch database/database.sqlite && \
     php artisan key:generate --force && \
     php artisan migrate --force && \
-    (php artisan db:seed --force || true) && \
+    php artisan db:seed --force && \
     chown -R www-data:www-data storage bootstrap/cache database
 
 EXPOSE 80

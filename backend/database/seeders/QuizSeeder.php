@@ -14,9 +14,6 @@ class QuizSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        Quiz::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $quizzes = [
             // --- Lesson 1 ---
@@ -7460,14 +7457,24 @@ class QuizSeeder extends Seeder
             ],
         ];
 
-        foreach (array_chunk($quizzes, 50) as $chunk) {
-            $records = array_map(function ($item) {
-                return array_merge($item, [
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }, $chunk);
-            Quiz::insert($records);
+        $existingLessonIds = Quiz::select('lesson_id')->distinct()->pluck('lesson_id')->flip();
+
+        $toInsert = [];
+        foreach ($quizzes as $item) {
+            if (isset($existingLessonIds[$item['lesson_id']])) {
+                continue;
+            }
+            $toInsert[] = array_merge($item, [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        if (!empty($toInsert)) {
+            foreach (array_chunk($toInsert, 50) as $chunk) {
+                Quiz::insert($chunk);
+            }
         }
     }
 }
+
