@@ -1,0 +1,86 @@
+DOKUMEN RANCANGAN SISTEM & UI/UX: RUANGPAHAM
+
+Tema: Innovating Education Through Technology (Web Education for Kids)
+Target Pengguna: Siswa Sekolah Dasar (Kelas 1 - 6)
+Tech Stack Utama: React JS (Frontend) & Laravel (Backend)
+
+--------------------------------------------------
+
+1. KONSEP VISUAL & PANDUAN UI/UX
+Desain ruangpaham difokuskan pada antarmuka yang ramah anak, bersih (tidak terlalu ramai/cluttered), responsif, dan interaktif. 
+
+* Palet Warna Utama (Blue-Themed):
+  - Primary Blue (#3B82F6): Biru cerah untuk tombol utama, header, dan CTA.
+  - Accent Blue (#93C5FD): Biru muda/pastel untuk latar belakang card.
+  - Background (#F8FAFC): Putih keabu-abuan/putih salju agar mata anak tidak cepat lelah.
+  - Text (#1E293B): Biru dongker gelap untuk teks agar kontras tetap nyaman dibaca.
+
+* Tipografi: Menggunakan font poppins.
+
+* Desain Elemen & Interaksi: 
+  - Menggunakan border-radius besar dan soft shadow pada card.
+  - Wajib menggunakan ikon ilustratif di setiap card.
+  - Animasi: Menggunakan Framer Motion untuk transisi smooth fade-in, animasi scroll reveal, dan micro-interactions (efek bouncy).
+
+--------------------------------------------------
+
+2. ARSITEKTUR TEKNOLOGI & DATABASE (BACKEND LARAVEL)
+Menggunakan arsitektur Headless CMS di mana Laravel berfungsi murni sebagai penyedia RESTful API.
+
+* Autentikasi: Menggunakan Laravel Sanctum.
+* Database Seeder: 
+  - SubjectSeeder: Data mata pelajaran beserta URL ikon.
+  - LessonSeeder: Data materi hierarkis per kelas (teks, link gambar, link video).
+  - QuizSeeder: Bank soal kuis per materi lengkap dengan opsi jawaban dan feedback.
+* Tracking Progress: Tabel user_progress (relasi user_id dan lesson_id) dengan status kolom 'belum_mulai', 'sedang_belajar', dan 'selesai'.
+
+--------------------------------------------------
+
+3. STRUKTUR & ALUR HALAMAN (FRONTEND REACT JS)
+
+3.1. Landing Page
+* Navbar:
+  - Kiri: Logo ruangpaham
+  - Tengah: Tautan "Jelajahi"
+  - Kanan: Tombol CTA "Daftar" (Solid Biru) dan "Masuk" (Outline Biru).
+* Hero Section: Headline "Belajar Makin Seru dan Mudah di ruangpaham!", ilustrasi animasi mengambang, CTA "Mulai Petualangan Belajarmu".
+* Section Keunggulan & Mapel: Grid card pratinjau mapel dan 3 pilar keunggulan.
+
+3.2. Register Page (Daftar)
+* Formulir: Nama Lengkap, Email, Dropdown Kelas (1-6), Password.
+* CTA: Tombol besar "Daftar Sekarang".
+* Footer Form: Teks tautan "Sudah punya akun? Masuk".
+
+3.3. Login Page (Masuk)
+* Formulir: Nama Lengkap / Email, Password.
+* CTA: Tombol besar "Masuk".
+* Footer Form: Teks tautan "Belum punya akun? Daftar".
+
+3.4. Dashboard Siswa & Gamifikasi
+* Header: Sapaan personal "Halo, [Nama Siswa]!"
+* Widget Learning Streak (Api Semangat): Ikon api (menunjukkan hari beruntun login).
+* Section Card Progress (Lanjutkan Belajar):
+  - Kondisi 1 (Sudah memulai belajar): Menampilkan card dengan ikon mapel, judul materi, progress bar, dan tombol "Lanjut Belajar".
+  - Kondisi 2 (Belum ada aktivitas): Tampilkan empty state "Kamu belum mulai belajar. Mulai petualangan belajarmu sekarang!" dan tombol "Mulai Belajar".
+* Misi Harian (Daily Quests): Card dengan progress bar melingkar (contoh: "Selesaikan 1 Kuis IPA").
+
+3.5. Jelajahi (Mata Pelajaran)
+* Filter/Tabs Kelas: Tombol filter (Kelas 1 hingga Kelas 6).
+* Grid Mata Pelajaran: Card besar untuk IPA, IPS, Matematika, dll.
+* Alur: Saat card diklik, diarahkan ke daftar urutan materi/bab (Lesson List).
+
+3.6. Modul Pembelajaran & Kuis (Knowledge Check)
+* Fase Materi:
+  - Teks penjelasan dipecah pendek (chunking) maksimal 3-4 baris.
+  - Disisipkan foto/ilustrasi dan video edukasi dalam bingkai biru.
+  - CTA bawah: Tombol berdenyut "Aku Sudah Paham! Mulai Kuis".
+* Fase Kuis:
+  - UI Fokus: 1 soal per layar dengan teks besar.
+  - Opsi Jawaban: Kotak opsi (A, B, C, D) berbentuk grid besar.
+  - Feedback Instan: Tombol hijau + centang (benar) atau tombol merah + silang + pop-up penjelasan (salah).
+
+3.7. Profil & Edit Profil
+* Halaman View: Menampilkan Avatar karakter, Nama, Kelas, dan Statistik.
+* Halaman Edit:
+  - Form edit Nama Lengkap, ubah Kelas, ubah Password.
+  - Pemilihan Avatar: Galeri default (hewan/robot) tanpa fitur unggah foto asli untuk privasi.

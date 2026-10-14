@@ -1,0 +1,270 @@
+============================================================
+JURNAL PROMPT: RUANGPAHAM
+============================================================
+
+Proyek: ruang-paham — Web Education for Kids (Siswa SD Kelas 1–6)
+Tech Stack: React JS (Vite) + Laravel (Headless REST API, Sanctum)
+Sumber: log-prompt.md (48 prompt terkurasi menjadi 5 prompt kunci)
+
+Jurnal ini merangkum lima prompt yang paling menentukan arah proyek, satu untuk tiap fase: ide/PRD, debugging, audit & optimasi, finishing, dan satu prompt bebas.
+
+============================================================
+RINGKASAN
+============================================================
+
+[1] Ide / PRD (Prompt #1)
+    Inti  : Brief lengkap sistem, UI/UX, database, dan alur halaman
+    Hasil : Fondasi 7 halaman, 5 tabel, REST API, dan design system
+
+[2] Debugging (Prompt #43)
+    Inti  : Cari akar penyebab error Unexpected end of JSON input
+    Hasil : 5 akar masalah ditemukan, 14 skenario uji lulus
+
+[3] Audit & Optimasi (Prompt #44)
+    Inti  : Audit menyeluruh tanpa mengubah sistem dan tampilan
+    Hasil : Bug poin ganda dan query MySQL-only diperbaiki
+
+[4] Finishing (Prompt #46)
+    Inti  : Final QA mode read-only + update README
+    Hasil : Status READY untuk demonstrasi/lomba
+
+[5] Bebas (Deployment) (Prompt #48)
+    Inti  : Materi kosong setelah deploy, tanpa akses terminal
+    Hasil : Seeder aman + auto-seed saat startup
+
+============================================================
+1. PROMPT IDE / PRD — INISIALISASI PROYEK & SPESIFIKASI SISTEM
+============================================================
+
+Log asli: Prompt #1 · Tanggal: 2026-10-06
+
+PROMPT ASLI:
+------------------------------------------------------------
+buat new project dengan nama "ruang-paham" dan sesuaikan dengan brief tersebut, serta tambahkan folder "docs" dan beri new file bernama "log-prompt.md" di folder docs tersebut
+
+Brief:
+DOKUMEN RANCANGAN SISTEM & UI/UX: RUANGPAHAM
+Tema: Innovating Education Through Technology (Web Education for Kids)
+Target Pengguna: Siswa Sekolah Dasar (Kelas 1 - 6)
+Tech Stack Utama: React JS (Frontend) & Laravel (Backend)
+
+1. KONSEP VISUAL & PANDUAN UI/UX
+Desain ruangpaham difokuskan pada antarmuka yang ramah anak, bersih (tidak terlalu ramai/cluttered), responsif, dan interaktif. 
+- Palet Warna Utama (Blue-Themed):
+  * Primary Blue (#3B82F6): Biru cerah untuk tombol utama, header, dan CTA.
+  * Accent Blue (#93C5FD): Biru muda/pastel untuk latar belakang card.
+  * Background (#F8FAFC): Putih keabu-abuan/putih salju agar mata anak tidak cepat lelah.
+  * Text (#1E293B): Biru dongker gelap untuk teks agar kontras tetap nyaman dibaca.
+- Tipografi: Menggunakan font poppins.
+- Desain Elemen & Interaksi: 
+  * Menggunakan border-radius besar dan soft shadow pada card.
+  * Wajib menggunakan ikon ilustratif di setiap card.
+  * Animasi: Menggunakan Framer Motion untuk transisi smooth fade-in, animasi scroll reveal, dan micro-interactions (efek bouncy).
+
+2. ARSITEKTUR TEKNOLOGI & DATABASE (BACKEND LARAVEL)
+Menggunakan arsitektur Headless CMS di mana Laravel berfungsi murni sebagai penyedia RESTful API.
+- Autentikasi: Menggunakan Laravel Sanctum.
+- Database Seeder: 
+  * SubjectSeeder: Data mata pelajaran beserta URL ikon.
+  * LessonSeeder: Data materi hierarkis per kelas (teks, link gambar, link video).
+  * QuizSeeder: Bank soal kuis per materi lengkap dengan opsi jawaban dan feedback.
+- Tracking Progress: Tabel user_progress (relasi user_id dan lesson_id) dengan status kolom 'belum_mulai', 'sedang_belajar', dan 'selesai'.
+
+3. STRUKTUR & ALUR HALAMAN (FRONTEND REACT JS)
+3.1. Landing Page: Navbar (Logo, Jelajahi, CTA Daftar & Masuk), Hero Section, Keunggulan & Mapel.
+3.2. Register Page: Formulir (Nama, Email, Dropdown Kelas 1-6, Password), CTA Daftar Sekarang, Link Masuk.
+3.3. Login Page: Formulir (Nama/Email, Password), CTA Masuk, Link Daftar.
+3.4. Dashboard Siswa & Gamifikasi: Header Halo [Nama], Widget Learning Streak (Api Semangat), Section Lanjutkan Belajar / Empty State, Misi Harian.
+3.5. Jelajahi (Mata Pelajaran): Filter Kelas 1-6, Grid Mapel, Alur ke Lesson List.
+3.6. Modul Pembelajaran & Kuis: Fase Materi (chunking 3-4 baris, foto/video, CTA 'Aku Sudah Paham! Mulai Kuis'), Fase Kuis (1 soal per layar, opsi grid A-D, feedback instan + penjelasan).
+3.7. Profil & Edit Profil: View (Avatar, Nama, Kelas, Statistik), Edit (Form edit Nama, Kelas, Password, Galeri Avatar Hewan/Robot aman privasi anak).
+------------------------------------------------------------
+
+MENGAPA PROMPT INI EFEKTIF
+--------------------------
+  * Memuat seluruh konteks sekaligus: tema, target pengguna, tech stack, palet warna (kode hex), tipografi, dan gaya animasi.
+  * Arsitektur backend ditentukan jelas (Headless CMS, Sanctum, tiga seeder, tabel user_progress dengan tiga status).
+  * Alur halaman dirinci per bagian (3.1–3.7), jadi tidak ada ruang tebakan untuk fitur inti.
+
+HASIL
+-----
+  * Struktur monorepo ruang-paham dengan folder docs/log-prompt.md.
+  * Backend Laravel + Sanctum, migration, model, seeder, dan controller REST API.
+  * Frontend React dengan 7 halaman: Landing, Register, Login, Dashboard (gamifikasi), Jelajahi, Materi & Kuis, serta Profil.
+  * Build frontend sukses 100%.
+
+CATATAN PEMBELAJARAN
+--------------------
+Brief yang terstruktur dengan nomor bagian membuat hasil pertama langsung mendekati kebutuhan, sehingga revisi berikutnya fokus pada penyempurnaan, bukan pembangunan ulang.
+
+============================================================
+2. PROMPT DEBUGGING — STABILISASI AUTENTIKASI
+============================================================
+
+Log asli: Prompt #43
+
+PROMPT ASLI:
+------------------------------------------------------------
+Lakukan investigasi menyeluruh, debugging, dan perbaikan terhadap sistem authentication pada project Ruang Paham yang sudah dikembangkan.
+MASALAH UTAMA:
+Ketika website baru dijalankan, dibuka kembali, atau siswa mencoba login, terkadang muncul error:
+Failed to execute 'json' on 'Response': Unexpected end of JSON input
+Masalah ini berulang dan mengganggu proses login siswa.
+TUJUAN UTAMA:
+Memastikan sistem authentication berjalan stabil, tidak mengalami error parsing JSON akibat implementasi yang salah, dan dapat digunakan secara konsisten tanpa harus memperbaiki kode atau konfigurasi setiap kali website dijalankan.
+Jangan hanya menyembunyikan pesan error. Temukan dan perbaiki akar penyebabnya.
+------------------------------------------------------------
+
+MENGAPA PROMPT INI EFEKTIF
+--------------------------
+  * Menyebut pesan error persis dan kapan muncul (saat website baru dijalankan, dibuka kembali, atau login).
+  * Menetapkan tujuan yang terukur: stabil tanpa perbaikan manual berulang.
+  * Ada larangan eksplisit: "Jangan hanya menyembunyikan pesan error", sehingga AI dipaksa mencari akar masalah.
+
+AKAR MASALAH YANG DITEMUKAN
+---------------------------
+1. 215 file bundle usang menumpuk di backend/public/assets/ karena emptyOutDir: false. Sebanyak 37 di antaranya masih memanggil res.json() mentah.
+2. fetch() tanpa error trapping di services/api.js, jadi respons kosong atau backend belum siap langsung crash.
+3. Token cacat ("undefined" / "null") tersimpan di localStorage pada AuthContext.jsx.
+4. Tidak ada header no-cache pada SPA catch-all di routes/web.php.
+5. Vite proxy tidak mengembalikan JSON 503 saat backend belum siap.
+
+HASIL
+-----
+  * Fungsi request() terpusat yang selalu membaca res.text() lalu parsing kondisional.
+  * Pesan error ramah anak per kode status (502/503/504, 419, 404, 422, 401, 500+).
+  * Plugin cleanAssetsPlugin di Vite: aset usang berkurang dari 215 menjadi 13 file.
+  * Header no-cache dan fallback JSON 404 untuk rute api/*.
+  * 14 dari 14 skenario uji lulus, termasuk PHPUnit dan build frontend.
+
+CATATAN PEMBELAJARAN
+--------------------
+Prompt debugging terbaik berisi gejala, kondisi pemicu, tujuan, dan larangan solusi tambal-sulam.
+
+============================================================
+3. PROMPT AUDIT & OPTIMASI — MENJELANG FINALISASI
+============================================================
+
+Log asli: Prompt #44
+
+PROMPT ASLI:
+------------------------------------------------------------
+LAKUKAN SESUAI BRIEFING:
+AUDIT & OPTIMASI MENYELURUH — RUANGPAHAM
+JANGAN MENGUBAH SISTEM DAN TAMPILAN DARI YANG SEBELUMNYA
+Lanjutkan pengembangan project RuangPaham yang sudah hampir selesai dan telah melalui tahap debugging serta stabilisasi authentication.
+Sekarang lakukan audit menyeluruh, optimasi, dan regression testing terhadap implementasi yang sudah tersedia.
+PENTING: Jangan membuat ulang project, jangan melakukan redesign, dan jangan menambahkan fitur baru. Fokus pada pemeriksaan, perbaikan masalah yang terbukti, dan optimasi menjelang finalisasi.
+------------------------------------------------------------
+
+MENGAPA PROMPT INI EFEKTIF
+--------------------------
+  * Membatasi ruang lingkup dengan tegas: tidak membuat ulang, tidak redesign, tidak menambah fitur.
+  * Meminta tiga hal sekaligus: audit, optimasi, dan regression testing.
+  * Hanya "masalah yang terbukti" yang boleh diperbaiki, jadi tidak ada perubahan spekulatif.
+
+TEMUAN & PERBAIKAN UTAMA
+------------------------
+  * Backend: klausa MySQL FIELD() di DashboardController.php diganti CASE WHEN (ANSI SQL) agar aman di SQLite. Validasi password profil diselaraskan ke min:8.
+  * Gamifikasi (temuan kritis): mengulang kuis pada materi yang sudah selesai menambah poin berkali-kali. Diperbaiki dengan pengecekan $alreadyCompleted, dan skor terbaik tetap disimpan lewat max().
+  * Real-time: polling 10 detik di ActivitiesPage.jsx diberi isMountedRef dan isFetchingRef untuk mencegah memory leak dan request bertumpuk.
+  * Performa: code-splitting/lazy loading, chunk utama sekitar 40 kB gzipped, build 1,01 detik.
+  * Data terverifikasi: 8 mata pelajaran, 67 materi, 670 soal kuis (10 per modul), tanpa wipe data pengguna.
+
+CATATAN PEMBELAJARAN
+--------------------
+Batasan "jangan ubah apa pun selain yang terbukti bermasalah" menjaga stabilitas sambil tetap menangkap bug tersembunyi.
+
+============================================================
+4. PROMPT FINISHING — FINAL QA STRICT READ-ONLY
+============================================================
+
+Log asli: Prompt #46
+
+PROMPT ASLI:
+------------------------------------------------------------
+FINALISASI SEUAI BRIEFING INI:
+PROMPT FINALISASI RUANG PAHAM — STRICT READ-ONLY FINAL QA
+UPDATE README UNTUK CARA MENJALANKAN PROYEK NYA DENGAN MENJALANKAN FRONTEND DAN BACKEND 
+KONTEKS:
+Project Ruang Paham sudah hampir selesai. Lakukan pemeriksaan akhir (Final Quality Assurance) berdasarkan SOURCE CODE AKTUAL pada workspace dan dokumentasi repository. Tujuan tugas ini adalah memastikan kesiapan demonstrasi/lomba, BUKAN memperbaiki, mengoptimalkan, mengubah, atau mengembangkan aplikasi.
+PERATURAN UTAMA — TIDAK BOLEH ADA PERUBAHAN
+1. Terapkan STRICT READ-ONLY MODE terhadap seluruh repository dan data.
+2. JANGAN mengedit, membuat, menghapus, memindahkan, memformat, atau me-rename file apa pun di project, termasuk file dokumentasi, lockfile, konfigurasi, dan .env.
+3. JANGAN mengubah desain UI/UX, layout, warna, tipografi, ukuran, responsivitas, icon, ilustrasi, animasi, teks, atau konten.
+4. JANGAN mengubah alur, fitur, arsitektur, sistem autentikasi, API, controller, model, route, middleware, state, algoritma quiz, progress, poin, atau streak.
+5. JANGAN mengubah database, schema, migration, Seeder, akun, progress siswa, hasil quiz, atau data apa pun.
+6. JANGAN melakukan refactoring, dependency update, package install, code generation, cache clear, auto-fix, commit, push, merge, deployment, atau perubahan Docker.
+7. JANGAN menjalankan perintah yang berpotensi menulis/mengubah data.
+------------------------------------------------------------
+
+MENGAPA PROMPT INI EFEKTIF
+--------------------------
+  * Menetapkan mode read-only yang eksplisit, dengan daftar larangan rinci (file, UI, alur, database, dependency, git/deploy).
+  * Tujuannya jelas: kesiapan demonstrasi/lomba, bukan perbaikan baru.
+  * Dipadukan dengan satu tugas yang aman dan terdefinisi: update README.
+
+HASIL
+-----
+  * README diperbarui dengan panduan terpisah untuk Backend (php artisan serve --host=127.0.0.1 --port=8000) dan Frontend (npm run dev), lengkap dengan prasyarat dan akun uji.
+  * Status akhir: READY (100% siap demonstrasi dan pengujian).
+  * Repository bersih; 8 mapel, 67 materi, 670 kuis, dan akun siswa tetap utuh.
+
+CATATAN PEMBELAJARAN
+--------------------
+Di tahap akhir, risiko terbesar adalah perubahan baru. Mengunci AI ke mode read-only menjaga hasil yang sudah stabil.
+
+============================================================
+5. PROMPT BEBAS — PERBAIKAN MATERI KOSONG SETELAH DEPLOYMENT
+============================================================
+
+Log asli: Prompt #48 · Alasan dipilih: satu-satunya kasus produksi nyata dengan tenggat dan batasan hosting tanpa terminal.
+
+PROMPT ASLI:
+------------------------------------------------------------
+URGENT — PERBAIKI MATERI RUANGPAHAM YANG KOSONG SETELAH DEPLOYMENT
+Repository: https://github.com/najadinda/ruang-paham
+Website production: https://peserta10.m1sec.my.id
+Deadline lomba besok. Prioritaskan solusi tercepat, aman, dan minimal.
+MASALAH:
+Website sudah berhasil di-deploy.
+Login dan halaman Jelajahi dapat dibuka.
+Seluruh mata pelajaran Kelas 1–6 dan Semua Kelas kosong.
+GET /api/subjects?grade=3 menghasilkan HTTP 200: {"grade_filter":3,"subjects":[]}
+Hosting tidak menyediakan terminal/console yang dapat diakses.
+------------------------------------------------------------
+
+MENGAPA PROMPT INI EFEKTIF
+--------------------------
+  * Memberi konteks lengkap: repo, URL produksi, tenggat, dan bukti konkret (GET /api/subjects?grade=3 mengembalikan subjects: []).
+  * Menyebut batasan lingkungan (tidak ada terminal) dan prioritas: tercepat, aman, minimal.
+
+AKAR MASALAH
+------------
+1. Query API bukan penyebab. Tabel subjects di produksi memang berisi 0 record.
+2. Seeder memakai SET FOREIGN_KEY_CHECKS (sintaks MySQL) yang gagal di SQLite Docker.
+3. Dockerfile memakai || true pada db:seed, sehingga kegagalan seeder tersembunyi.
+4. Tanpa SSH/console, seeder tidak bisa dijalankan manual.
+
+SOLUSI MINIMAL & AMAN
+---------------------
+  * SubjectSeeder, LessonSeeder, QuizSeeder memakai updateOrCreate dan chunk insert (tanpa truncate() dan tanpa SET FOREIGN_KEY_CHECKS).
+  * Auto-seed aman di AppServiceProvider::boot(): hanya jalan sekali bila subjects kosong, tanpa endpoint publik, dan tidak menyentuh users atau user_progress.
+  * Dockerfile: || true dihapus agar kegagalan seed terlihat saat build.
+
+HASIL VERIFIKASI
+----------------
+8 mata pelajaran, 67 materi, dan 670 kuis termuat; data akun dan progress siswa tetap utuh; GET /api/subjects?grade=3 dan grade=4 mengembalikan 8 mapel.
+
+CATATAN PEMBELAJARAN
+--------------------
+Pada masalah produksi, bukti nyata (respons API) dan batasan lingkungan di dalam prompt mengarahkan AI ke solusi yang sesuai kondisi hosting.
+
+============================================================
+POLA YANG TERLIHAT DARI KELIMA PROMPT
+============================================================
+
+1. Konteks dulu, perintah kemudian: semua prompt menyebut kondisi aktual (stack, error, URL, tenggat).
+2. Batasan eksplisit: "jangan redesign", "jangan sembunyikan error", "strict read-only".
+3. Tujuan terukur: stabil, siap demo, materi terisi.
+4. Bukti, bukan asumsi: akar masalah dicari dari kode dan respons nyata, lalu diverifikasi dengan pengujian.
