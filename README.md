@@ -57,17 +57,37 @@ ruang-paham/
 
 ## 🚀 Panduan Menjalankan Proyek
 
-### Cara Menjalankan:
-Cukup jalankan Laravel frontend:
+### 1. Prasyarat Sistem
+- **PHP**: Versi 8.2 atau lebih baru dengan ekstensi `pdo`, `pdo_mysql` / `pdo_sqlite`, `bcmath`, `curl`.
+- **Composer**: Versi 2.x
+- **Node.js**: Versi 18 atau 20 LTS & npm
+- **Database**: MySQL / MariaDB (misal via Laragon atau XAMPP)
+
+---
+
+### 2. Langkah 1: Menjalankan Backend (Laravel RESTful API)
+Buka terminal pertama di direktori project:
 ```bash
-cd d:\laragon\www\ruang-paham\frontend
+cd backend
+composer install
+php artisan serve --host=127.0.0.1 --port=8000
+```
+> Server backend akan aktif di: **`http://127.0.0.1:8000`**
+
+*(Catatan: Pastikan file `.env` di folder `backend/` telah terhubung ke database `ruang_paham` dan migrasi/seeder telah dijalankan).*
+
+---
+
+### 3. Langkah 2: Menjalankan Frontend (React + Vite)
+Buka terminal kedua di direktori project:
+```bash
+cd frontend
 npm install
 npm run dev
 ```
+> Server development frontend akan aktif di: **`http://localhost:5173`**
 
-### 🌐 Akses Website:
-Buka di browser:
-👉 **`http://localhost:5173/`**
+---
 
 ## 📑 Dokumentasi & Prompt Log
 Semua catatan arsitektur, analisis kebutuhan, skema tabel database, endpoint API, dan log prompt tersimpan rapi di:  
