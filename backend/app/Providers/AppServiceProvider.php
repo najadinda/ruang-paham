@@ -27,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
         if (!$checked) {
             $checked = true;
             try {
+                if (!\Illuminate\Support\Facades\Schema::hasTable('users')) {
+                    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                }
                 if (\Illuminate\Support\Facades\Schema::hasTable('subjects')) {
                     if (\App\Models\Subject::count() === 0) {
                         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);

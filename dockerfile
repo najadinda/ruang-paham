@@ -28,11 +28,11 @@ COPY --from=frontend-builder /app/backend/public/ ./public/
 RUN cp .env.example .env && \
     composer install --no-dev --optimize-autoloader && \
     touch database/database.sqlite && \
-    php artisan key:generate --force && \
+    (grep -q "APP_KEY=base64" .env || php artisan key:generate --force) && \
     php artisan migrate --force && \
     php artisan db:seed --force && \
     chown -R www-data:www-data storage bootstrap/cache database
 
 EXPOSE 80
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+CMD ["sh", "-c", "touch database/database.sqlite && php artisan migrate --force && php artisan db:seed --force && exec php artisan serve --host=0.0.0.0 --port=80"]

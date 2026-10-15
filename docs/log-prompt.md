@@ -2173,4 +2173,73 @@ Hosting tidak menyediakan terminal/console yang dapat diakses.
   - Data akun siswa (`ayudhyanajaaa@gmail.com` / `Ayudhya Naja`) dan progress tetap utuh 100%.
 - Endpoint `GET /api/subjects?grade=3` dan `GET /api/subjects?grade=4` terverifikasi mengembalikan 8 mata pelajaran lengkap dengan `lessons_count` yang sesuai.
 
+---
+
+## 54. Log Prompt #49: Perbaikan Database Persistence, Container Lifecycle & Error 500 Dashboard (peserta10.m1sec.my.id)
+
+### 54.1 Catatan Permintaan Pengguna (Prompt #49)
+```text
+URGENT — PERBAIKAN DATABASE PERSISTENCE & LOGIN PRODUCTION RUANGPAHAM
+Repository: https://github.com/najadinda/ruang-paham
+Production: https://peserta10.m1sec.my.id/
+Project sudah di-deploy, tetapi mengalami masalah serius:
+Pengguna berhasil register dan login.
+Setelah beberapa menit tidak menggunakan website, pengguna tidak bisa login kembali.
+Muncul pesan "Nama Lengkap / Email atau Password tidak cocok."
+Semua mata pelajaran Kelas 1–6 dan Semua Kelas kosong.
+Endpoint GET /api/subjects?grade=3 menghasilkan HTTP 200 dengan subjects: [].
+Hosting tidak menyediakan terminal yang dapat diakses.
+```
+
+### 54.2 Investigasi & Bukti Akar Masalah (Root Cause Analysis)
+1. **Bukti Error 500 pada Endpoint Dashboard**:
+   - Pengujian langsung ke production `GET /api/dashboard` dengan bearer token menghasilkan HTTP 500:
+     `Call to a member function getKey() on string at Collection.php:679`
+   - Pada `DashboardController.php` baris 28 dan 128:
+     ```php
+     UserProgress::where('user_id', $user->id)
+         ->get()
+         ->map(fn($p) => ...->toDateString())
+         ->unique()
+     ```
+   - `UserProgress::get()` mengembalikan `Eloquent\Collection`. Ketika `->map()` dipanggil, tipe koleksi tetap `Eloquent\Collection`. Metode `unique()` tanpa argumen pada Eloquent memanggil `$item->getKey()` pada setiap elemen karena menganggap elemen adalah Model. Karena elemennya adalah string tanggal, PHP melempar Fatal Error 500. Setiap kali siswa login dan dialihkan ke dashboard, halaman dashboard crash.
+
+2. **Mekanisme Ephemeral Container & Hilangnya Akun Setelah Idle**:
+   - Di lingkungan hosting Docker/PaaS (tanpa persistent volume), container file sistem bersifat sementara (ephemeral layer).
+   - Ketika website tidak digunakan selama beberapa menit, hosting platform (seperti Render/Koyeb/Railway/Fly/Coolify) mematikan container (scale-to-zero) atau melakukan restart.
+   - Tanpa Persistent Volume yang di-mount ke `/var/www/html/database`, file `database.sqlite` direset kembali ke snapshot awal image Docker. Seluruh akun siswa yang baru didaftarkan di runtime hilang, sehingga login gagal dengan pesan "Nama Lengkap / Email atau Password tidak cocok."
+
+3. **Lifecycle Startup Container (`CMD`)**:
+   - Sebelumnya `dockerfile` hanya menjalankan `CMD ["php", "artisan", "serve", ...]`.
+   - Jika pengguna memasang persistent volume baru/kosong di hosting pada path `/var/www/html/database`, volume tersebut menimpa database bawaan image dengan folder kosong. Karena tidak ada auto-migrate di startup, database menjadi kosong melompong (0 mata pelajaran).
+
+4. **Stabilitas `APP_KEY` Antar-Build**:
+   - Pada build sebelumnya, `php artisan key:generate --force` selalu dieksekusi saat Docker build, merotasi `APP_KEY` jika tidak ada env `APP_KEY` di panel hosting.
+
+### 54.3 Solusi Teknis Teraman & Minimal yang Diterapkan
+1. **Perbaikan Error 500 pada Dashboard**:
+   - [DashboardController.php](file:///d:/laragon/www/ruang-paham/backend/app/Http/Controllers/Api/DashboardController.php): Menambahkan `->toBase()` setelah `->get()` pada query `userActiveDates` dan `distinctSubjectsToday`. Koleksi dikonversi menjadi `Illuminate\Support\Collection` standar sehingga `->unique()` bekerja mulus pada string dan integer tanpa error `getKey()`.
+
+2. **Lifecycle Startup Otomatis (Auto-Migrate & Auto-Seed pada Container Boot)**:
+   - [dockerfile](file:///d:/laragon/www/ruang-paham/dockerfile): Memperbarui `CMD`:
+     ```dockerfile
+     CMD ["sh", "-c", "touch database/database.sqlite && php artisan migrate --force && php artisan db:seed --force && exec php artisan serve --host=0.0.0.0 --port=80"]
+     ```
+     Menjamin file database SQLite selalu dibuat jika belum ada, migrasi dijalankan secara aman, dan seeder idempotent mengisi 8 mata pelajaran, 67 modul, dan 670 kuis saat container menyala.
+   - [AppServiceProvider.php](file:///d:/laragon/www/ruang-paham/backend/app/Providers/AppServiceProvider.php): Menambahkan guard `if (!Schema::hasTable('users')) Artisan::call('migrate', ['--force' => true])` untuk melindungi dari volume kosong yang di-mount saat runtime.
+
+3. **Konsistensi `APP_KEY`**:
+   - [backend/.env.example](file:///d:/laragon/www/ruang-paham/backend/.env.example): Mengisi nilai default persistent `APP_KEY=base64:VltGjQQuz+Q6PY+3uZ3Z0/7sXlQEQE1VhtGcL8J/MwQ=`.
+   - [dockerfile](file:///d:/laragon/www/ruang-paham/dockerfile): Memodifikasi baris build menjadi `(grep -q "APP_KEY=base64" .env || php artisan key:generate --force)` sehingga key yang sudah ada tidak pernah diganti secara acak.
+
+4. **Panduan Konfigurasi Persistent Storage untuk Pengguna**:
+   - Memberikan petunjuk konfigurasi Persistent Volume pada panel hosting untuk mem-mount direktori `/var/www/html/database` agar data siswa dan quiz tersimpan permanen di storage host dan tidak hilang saat container restart.
+
+### 54.4 Hasil Verifikasi
+- Pengujian local dan simulasi:
+  - `toBase()->unique()` pada tanggal aktivitas dan subject ID: 100% SUKSES tanpa exception.
+  - Alur Register -> Login -> Ambil Token -> GET Dashboard -> Sukses mengembalikan nama siswa, streak, dan data aktivitas.
+  - Seeder idempotent terbukti tidak menggandakan data dan tidak merusak akun yang sudah ada.
+
+
 

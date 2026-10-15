@@ -27,6 +27,7 @@ class DashboardController extends Controller
         // Ambil tanggal unik aktivitas belajar user dari database
         $userActiveDates = UserProgress::where('user_id', $user->id)
             ->get()
+            ->toBase()
             ->map(fn($p) => $p->updated_at ? $p->updated_at->setTimezone('Asia/Jakarta')->toDateString() : null)
             ->filter()
             ->unique()
@@ -128,6 +129,7 @@ class DashboardController extends Controller
             ->where('user_id', $user->id)
             ->whereDate('updated_at', $todayStr)
             ->get()
+            ->toBase()
             ->pluck('lesson.subject_id')
             ->filter()
             ->unique()
